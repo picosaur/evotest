@@ -4,6 +4,8 @@
 class QLabel;
 class QPushButton;
 
+namespace EvoTest {
+
 class TopIndicatorWidget : public QWidget
 {
     Q_OBJECT
@@ -38,3 +40,5 @@ private:
     int m_precision;       // Храним настройку точности
     double m_currentValue; // Храним текущее число
 };
+
+} // namespace EvoTest

@@ -4,6 +4,8 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
+namespace EvoTest {
+
 TopIndicatorWidget::TopIndicatorWidget(const QString &title, const QString &unit, int precision, QWidget *parent)
     : QWidget(parent)
     , m_precision(precision) // Инициализируем переданным значением
@@ -131,3 +133,5 @@ void TopIndicatorWidget::setTitle(const QString &title) {
 void TopIndicatorWidget::updateDisplay() {
     m_indicator->setText(QString::number(m_currentValue, 'f', m_precision));
 }
+
+} // namespace EvoTest

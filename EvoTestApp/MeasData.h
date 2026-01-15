@@ -2,12 +2,10 @@
 
 namespace EvoTest {
 
-class TopPanelWidget
+class MeasData
 {
 public:
-    TopPanelWidget();
-
-    void addIndicator();
+    MeasData();
 };
 
 } // namespace EvoTest

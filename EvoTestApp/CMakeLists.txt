@@ -44,6 +44,15 @@ else()
     else()
         add_executable(EvoTestApp
             ${PROJECT_SOURCES}
+            MeasData.h MeasData.cpp
+            PlanSensorForm.h PlanSensorForm.cpp PlanSensorForm.ui
+            MainWidget.h MainWidget.cpp MainWidget.ui
+            TopWidget.h TopWidget.cpp TopWidget.ui
+            RealDisplayWidget.h RealDisplayWidget.cpp RealDisplayWidget.ui
+            PlanLeftWidget.h PlanLeftWidget.cpp PlanLeftWidget.ui
+            PlanWidget.h PlanWidget.cpp PlanWidget.ui
+            PlanMenuWidget.h PlanMenuWidget.cpp PlanMenuWidget.ui
+            PlanSetupWidget.h PlanSetupWidget.cpp PlanSetupWidget.ui
         )
     endif()
 endif()

@@ -8,6 +8,7 @@ QT_END_NAMESPACE
 class QHBoxLayout;
 class QLabel;
 
+namespace EvoTest {
 
 class MainWindow : public QMainWindow
 {
@@ -20,3 +21,5 @@ public:
 private:
     Ui::MainWindow *ui;
 };
+
+} // namespace EvoTest
