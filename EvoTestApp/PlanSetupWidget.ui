@@ -17,9 +17,9 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>6</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="standardTab">
       <attribute name="title">
        <string>Стандарт испытания</string>
       </attribute>
@@ -30,77 +30,112 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="PlanSensorForm" name="widget" native="true"/>
+        <widget class="PlanSensorForm" name="sensorForm" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>400</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_3">
+     <widget class="QWidget" name="planCommonTab">
       <attribute name="title">
        <string>Общий</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="PlanCommonForm" name="widget_2" native="true"/>
+        <widget class="PlanCommonForm" name="commonForm" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>600</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_4">
+     <widget class="QWidget" name="displayTab">
       <attribute name="title">
        <string>Отображение</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
-        <widget class="PlanDisplayForm" name="widget_8" native="true"/>
+        <widget class="PlanDisplayForm" name="displayForm" native="true"/>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_5">
+     <widget class="QWidget" name="controlModeTab">
       <attribute name="title">
        <string>Режим контроля</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="PlanControlModeForm" name="widget_3" native="true"/>
+        <widget class="PlanControlModeForm" name="controlModeForm" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>500</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_6">
+     <widget class="QWidget" name="stopCondTab">
       <attribute name="title">
        <string>Условия остановки машины</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="PlanStopCondForm" name="widget_4" native="true"/>
+        <widget class="PlanStopCondForm" name="stopCondForm" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>500</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_7">
+     <widget class="QWidget" name="planAnalysisTab">
       <attribute name="title">
        <string>Параметры анализа</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
-        <widget class="PlanAnalysisForm" name="widget_5" native="true"/>
+        <widget class="PlanAnalysisForm" name="planAnalysisForm" native="true">
+         <property name="maximumSize">
+          <size>
+           <width>650</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_8">
+     <widget class="QWidget" name="planCurveTab">
       <attribute name="title">
        <string>Кривая</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_7">
        <item>
-        <widget class="PlanCurveForm" name="widget_6" native="true"/>
+        <widget class="PlanCurveForm" name="planCurveForm" native="true"/>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_9">
+     <widget class="QWidget" name="planReportTab">
       <attribute name="title">
        <string>Отчетности</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_8">
        <item>
-        <widget class="PlanReportForm" name="widget_7" native="true"/>
+        <widget class="PlanReportForm" name="planReportForm" native="true"/>
        </item>
       </layout>
      </widget>
