@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PlanCommonForm</class>
+ <widget class="QWidget" name="PlanCommonForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1061</width>
+    <height>509</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="lineEdit_2">
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Справочные</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Источник деформации</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Жесткость рамы</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Мин. импульс (кГц) </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Источник деформации</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="text">
+        <string>0.1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QComboBox" name="comboBox_2">
+       <item>
+        <property name="text">
+         <string>Металл, твердое тело</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Древесина (2-5)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Нейлон (5-20)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Резина, стальной трос</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пружина (100-1000)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="checkBox">
+       <property name="text">
+        <string>Включить</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="comboBox_3">
+       <item>
+        <property name="text">
+         <string>Осевой экстензометр</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение траверсы</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер 2 средний</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер 3 средний</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер 4 средний</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="comboBox_4">
+       <item>
+        <property name="text">
+         <string>Осевой экстензометр</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение траверсы</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер №4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер 2 средний</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер 3 средний</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Микромер 4 средний</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string/>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="Label">
+          <property name="text">
+           <string>Начало удлинения: сил</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="LineEdit">
+          <property name="text">
+           <string>0.1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>N</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string/>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="Label_3">
+          <property name="text">
+           <string>Сила &gt; 0</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="LineEdit_3">
+          <property name="text">
+           <string>0.1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>N</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="checkBox_2">
+       <property name="text">
+        <string>Обнулить смещение траверсы при начале испытаний</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

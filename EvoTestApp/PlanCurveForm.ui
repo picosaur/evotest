@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PlanCurveForm</class>
+ <widget class="QWidget" name="PlanCurveForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>824</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Сравнительная кривая 2 Y:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Сравнительная кривая 1 Y:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QComboBox" name="comboBox_6">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="comboBox_7">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="comboBox">
+       <item>
+        <property name="text">
+         <string>Испытательная сила - Время</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Испытательная сила - Растяжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Испытательная сила - Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Сжатие - Растяжение от напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Сжатие - Время</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Растяжение от напряжения - Время</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Растяжение - Время</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение траверсы - Время</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное растяжение - Время</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="comboBox_3">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Тип испытательной кривой:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Сравнительная кривая 3 X:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Сравнительная кривая 3 Y:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="comboBox_4">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="comboBox_5">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="comboBox_2">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Сравнительная кривая 2 X:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Сравнительная кривая 1 X:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

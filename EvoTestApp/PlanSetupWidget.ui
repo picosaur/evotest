@@ -17,57 +17,147 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>8</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>Стандарт испытания</string>
       </attribute>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="planSensorTab">
       <attribute name="title">
        <string>Датчик</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="PlanSensorForm" name="widget" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_3">
       <attribute name="title">
        <string>Общий</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="PlanCommonForm" name="widget_2" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_4">
       <attribute name="title">
        <string>Отображение</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_9">
+       <item>
+        <widget class="PlanDisplayForm" name="widget_8" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_5">
       <attribute name="title">
        <string>Режим контроля</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="PlanControlModeForm" name="widget_3" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_6">
       <attribute name="title">
        <string>Условия остановки машины</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="PlanStopCondForm" name="widget_4" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_7">
       <attribute name="title">
        <string>Параметры анализа</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="PlanAnalysisForm" name="widget_5" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_8">
       <attribute name="title">
        <string>Кривая</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="PlanCurveForm" name="widget_6" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tab_9">
       <attribute name="title">
        <string>Отчетности</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="PlanReportForm" name="widget_7" native="true"/>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlanSensorForm</class>
+   <extends>QWidget</extends>
+   <header>PlanSensorForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanCommonForm</class>
+   <extends>QWidget</extends>
+   <header>PlanCommonForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanControlModeForm</class>
+   <extends>QWidget</extends>
+   <header>PlanControlModeForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanStopCondForm</class>
+   <extends>QWidget</extends>
+   <header>PlanStopCondForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanAnalysisForm</class>
+   <extends>QWidget</extends>
+   <header>PlanAnalysisForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanCurveForm</class>
+   <extends>QWidget</extends>
+   <header>PlanCurveForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanReportForm</class>
+   <extends>QWidget</extends>
+   <header>PlanReportForm.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PlanDisplayForm</class>
+   <extends>QWidget</extends>
+   <header>PlanDisplayForm.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -6,13 +6,13 @@ namespace Ui {
 class PlanSensorForm;
 }
 
-class MeasPlanSensorForm : public QWidget
+class PlanSensorForm : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MeasPlanSensorForm(QWidget *parent = nullptr);
-    ~MeasPlanSensorForm();
+    explicit PlanSensorForm(QWidget *parent = nullptr);
+    ~PlanSensorForm();
 
 private:
     Ui::PlanSensorForm *ui;

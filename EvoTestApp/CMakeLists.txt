@@ -19,10 +19,10 @@ set(PROJECT_SOURCES
         MainWindow.cpp
         MainWindow.h
         MainWindow.ui
-        TopPanelWidget.h
-        TopPanelWidget.cpp
-        TopIndicatorWidget.h
-        TopIndicatorWidget.cpp
+
+
+
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -53,6 +53,13 @@ else()
             PlanWidget.h PlanWidget.cpp PlanWidget.ui
             PlanMenuWidget.h PlanMenuWidget.cpp PlanMenuWidget.ui
             PlanSetupWidget.h PlanSetupWidget.cpp PlanSetupWidget.ui
+            PlanCommonForm.h PlanCommonForm.cpp PlanCommonForm.ui
+            PlanControlModeForm.h PlanControlModeForm.cpp PlanControlModeForm.ui
+            PlanStopCondForm.h PlanStopCondForm.cpp PlanStopCondForm.ui
+            PlanAnalysisForm.h PlanAnalysisForm.cpp PlanAnalysisForm.ui
+            PlanCurveForm.h PlanCurveForm.cpp PlanCurveForm.ui
+            PlanReportForm.h PlanReportForm.cpp PlanReportForm.ui
+            PlanDisplayForm.h PlanDisplayForm.cpp PlanDisplayForm.ui
         )
     endif()
 endif()

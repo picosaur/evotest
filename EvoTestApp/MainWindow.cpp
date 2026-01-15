@@ -4,8 +4,6 @@
 #include <QTabBar>
 #include <QLabel>
 
-namespace EvoTest {
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -17,5 +15,3 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-} // namespace EvoTest

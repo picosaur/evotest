@@ -1,0 +1,1913 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PlanDisplayForm</class>
+ <widget class="QWidget" name="PlanDisplayForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>987</width>
+    <height>622</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QComboBox" name="comboBox">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Отображаемых параметров</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="3" column="2">
+      <widget class="QComboBox" name="comboBox_5">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QComboBox" name="comboBox_13">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QComboBox" name="comboBox_17">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="comboBox_12">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="comboBox_10">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="5" column="2">
+      <widget class="QComboBox" name="comboBox_7">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="comboBox_2">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="7" column="3">
+      <widget class="QComboBox" name="comboBox_22">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="5" column="3">
+      <widget class="QComboBox" name="comboBox_20">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>5</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QComboBox" name="comboBox_6">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>3</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QComboBox" name="comboBox_9">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>6</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="comboBox_14">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Точность</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Единица</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
+      <widget class="QComboBox" name="comboBox_8">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QComboBox" name="comboBox_16">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QComboBox" name="comboBox_18">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>2</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QComboBox" name="comboBox_4">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="3">
+      <widget class="QComboBox" name="comboBox_19">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>4</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>7</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="comboBox_11">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QComboBox" name="comboBox_3">
+       <item>
+        <property name="text">
+         <string>1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>7</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QComboBox" name="comboBox_15">
+       <item>
+        <property name="text">
+         <string>Нагрузка</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечная деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Смещение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Положение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Длинноходовой экстензометр 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 1</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 4</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время испытания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Поперечное напряжение</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пик нагрузки</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Количество циклов</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Время удержания (обратный)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость нагружения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость смещения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость напряжения</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Скорость деформации</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 6</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 7</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Деформация 8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Осевая деформация</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Пика напряжения</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="3">
+      <widget class="QComboBox" name="comboBox_21">
+       <item>
+        <property name="text">
+         <string>мм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>см</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>м</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>дюйм</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>фут</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>мил</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Канал</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
