@@ -1,0 +1,937 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>950</width>
+    <height>850</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Стенд испытаний (EvoCmdApp)</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_6">
+    <item>
+     <widget class="QGroupBox" name="connectionGroup">
+      <property name="title">
+       <string>Подключение</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="hostLabel">
+         <property name="text">
+          <string>IP адрес:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="hostIn">
+         <property name="text">
+          <string>127.0.0.1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="portLabel">
+         <property name="text">
+          <string>Порт:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="portIn">
+         <property name="maximum">
+          <number>65535</number>
+         </property>
+         <property name="value">
+          <number>502</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="connectBtn">
+         <property name="text">
+          <string>Подключить</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QGroupBox" name="commandsGroup">
+        <property name="title">
+         <string>Команды (Битовая маска)</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="11" column="3">
+            <widget class="QCheckBox" name="compressionModeOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="1">
+            <widget class="QLabel" name="l11">
+             <property name="text">
+              <string>Растяжение/Прессование</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="2">
+            <widget class="QCheckBox" name="compressionModeIn"/>
+           </item>
+           <item row="6" column="2">
+            <widget class="QCheckBox" name="stopMmModeIn"/>
+           </item>
+           <item row="6" column="3">
+            <widget class="QCheckBox" name="stopMmModeOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QLabel" name="l6">
+             <property name="text">
+              <string>Стоп в режиме по мм</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="3">
+            <widget class="QCheckBox" name="moveTraverseUpOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QCheckBox" name="moveTraverseUpIn"/>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="l3">
+             <property name="text">
+              <string>Поднять траверсу</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLabel" name="l10">
+             <property name="text">
+              <string>Захват (Низ/Верх)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="3">
+            <widget class="QCheckBox" name="useTopGripOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="2">
+            <widget class="QCheckBox" name="useTopGripIn"/>
+           </item>
+           <item row="5" column="2">
+            <widget class="QCheckBox" name="startMmModeIn"/>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="l5">
+             <property name="text">
+              <string>Старт в режиме по мм</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="3">
+            <widget class="QCheckBox" name="startMmModeOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="2">
+            <widget class="QCheckBox" name="useServoDriveIn"/>
+           </item>
+           <item row="9" column="1">
+            <widget class="QLabel" name="l9">
+             <property name="text">
+              <string>Сервопривод</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="3">
+            <widget class="QCheckBox" name="useServoDriveOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="l2">
+             <property name="text">
+              <string>Стоп</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QCheckBox" name="stopOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QCheckBox" name="stopIn"/>
+           </item>
+           <item row="1" column="3">
+            <widget class="QCheckBox" name="startTestingOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="l1">
+             <property name="text">
+              <string>Начать испытания</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QCheckBox" name="startTestingIn"/>
+           </item>
+           <item row="8" column="2">
+            <widget class="QCheckBox" name="moveDownMmModeIn"/>
+           </item>
+           <item row="8" column="1">
+            <widget class="QLabel" name="l8">
+             <property name="text">
+              <string>Вниз в режиме по мм</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="3">
+            <widget class="QCheckBox" name="moveDownMmModeOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QCheckBox" name="moveTraverseDownOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QCheckBox" name="moveTraverseDownIn"/>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="l4">
+             <property name="text">
+              <string>Опустить траверсу</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1">
+            <widget class="QLabel" name="l7">
+             <property name="text">
+              <string>Вверх в режиме по мм</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="2">
+            <widget class="QCheckBox" name="moveUpMmModeIn"/>
+           </item>
+           <item row="7" column="3">
+            <widget class="QCheckBox" name="moveUpMmModeOut">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="checkable">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Запись</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Чтение</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QPushButton" name="writeAllCommandsBtn">
+             <property name="text">
+              <string>Записать (Word 0)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="readAllCommandsBtn">
+             <property name="text">
+              <string>Прочитать</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QGroupBox" name="indicatorGroup">
+          <property name="title">
+           <string>Индикаторы (Input Registers)</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <layout class="QGridLayout" name="gridLayout_3">
+             <item row="0" column="0">
+              <widget class="QLabel" name="currentPositionLabel">
+               <property name="text">
+                <string>Текущее положение (мм)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="currentPositionOut">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="currentPositionReadBtn">
+               <property name="text">
+                <string>Прочитать</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="currentLoadLabel">
+               <property name="text">
+                <string>Текущая нагрузка (кг)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="currentLoadOut">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPushButton" name="currentLoadReadBtn">
+               <property name="text">
+                <string>Прочитать</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="testTimeLabel">
+               <property name="text">
+                <string>Время испытания (сек)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="testTimeOut">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QPushButton" name="testTimeReadBtn">
+               <property name="text">
+                <string>Прочитать</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="testLengthLabel">
+               <property name="text">
+                <string>Длина с начала (мм)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLineEdit" name="testLengthOut">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QPushButton" name="testLengthReadBtn">
+               <property name="text">
+                <string>Прочитать</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="maxLoadLabel">
+               <property name="text">
+                <string>Макс. нагрузка (кг)</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLineEdit" name="maxLoadOut">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QPushButton" name="maxLoadReadBtn">
+               <property name="text">
+                <string>Прочитать</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="autoGroup">
+          <property name="title">
+           <string>Авто-чтение (мс)</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <layout class="QGridLayout" name="gridLayout_4">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="autoReadCommandsCheckBox">
+               <property name="text">
+                <string>Команды</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="autoReadCommandsIntervalIn">
+               <property name="text">
+                <string>500</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="autoReadParamsCheckBox">
+               <property name="text">
+                <string>Параметры</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="autoReadParamsIntervalIn">
+               <property name="text">
+                <string>1000</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="autoReadIndicatorsCheckBox">
+               <property name="text">
+                <string>Индикаторы</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLineEdit" name="autoReadIndicatorsIntervalIn">
+               <property name="text">
+                <string>100</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>17</width>
+               <height>17</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="paramsGroup">
+      <property name="title">
+       <string>Параметры (Holding Registers)</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_28">
+           <property name="text">
+            <string>Запись</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_29">
+           <property name="text">
+            <string>Чтение</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="speedMmMinLabel">
+           <property name="text">
+            <string>Скорость мм/мин (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="speedMmMinIn"/>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="speedMmMinWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QPushButton" name="speedMmMinReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLineEdit" name="speedMmMinOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="moveByMmLabel">
+           <property name="text">
+            <string>Сместить на X мм (Float)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="moveByMmIn"/>
+         </item>
+         <item row="2" column="2">
+          <widget class="QPushButton" name="moveByMmWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QPushButton" name="moveByMmReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QLineEdit" name="moveByMmOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="moveToMmLabel">
+           <property name="text">
+            <string>Переместить в x мм (Float)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="moveToMmIn"/>
+         </item>
+         <item row="3" column="2">
+          <widget class="QPushButton" name="moveToMmWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QPushButton" name="moveToMmReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QLineEdit" name="moveToMmOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="encoderPulsesLabel">
+           <property name="text">
+            <string>Кол-во имп/об энкодера (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="encoderPulsesIn"/>
+         </item>
+         <item row="4" column="2">
+          <widget class="QPushButton" name="encoderPulsesWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QPushButton" name="encoderPulsesReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="4">
+          <widget class="QLineEdit" name="encoderPulsesOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="motorScrewRatioLabel">
+           <property name="text">
+            <string>Кол-во об. двиг/швп (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="motorScrewRatioIn"/>
+         </item>
+         <item row="5" column="2">
+          <widget class="QPushButton" name="motorScrewRatioWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="3">
+          <widget class="QPushButton" name="motorScrewRatioReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="4">
+          <widget class="QLineEdit" name="motorScrewRatioOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="screwPitchLabel">
+           <property name="text">
+            <string>Кол-во мм/об швп (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="screwPitchIn"/>
+         </item>
+         <item row="6" column="2">
+          <widget class="QPushButton" name="screwPitchWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="3">
+          <widget class="QPushButton" name="screwPitchReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="4">
+          <widget class="QLineEdit" name="screwPitchOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="sensorRangeKnLabel">
+           <property name="text">
+            <string>Диапазон измерения датчика kN (Float)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="sensorRangeKnIn"/>
+         </item>
+         <item row="7" column="2">
+          <widget class="QPushButton" name="sensorRangeKnWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="3">
+          <widget class="QPushButton" name="sensorRangeKnReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="4">
+          <widget class="QLineEdit" name="sensorRangeKnOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="sensorSensitivityLabel">
+           <property name="text">
+            <string>Чувствительность датчика мм (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="sensorSensitivityIn"/>
+         </item>
+         <item row="8" column="2">
+          <widget class="QPushButton" name="sensorSensitivityWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="3">
+          <widget class="QPushButton" name="sensorSensitivityReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="4">
+          <widget class="QLineEdit" name="sensorSensitivityOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="controlErrorMmLabel">
+           <property name="text">
+            <string>Погрешность режима управления мм (Float)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="controlErrorMmIn"/>
+         </item>
+         <item row="9" column="2">
+          <widget class="QPushButton" name="controlErrorMmWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="3">
+          <widget class="QPushButton" name="controlErrorMmReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="4">
+          <widget class="QLineEdit" name="controlErrorMmOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="testSpeedLabel">
+           <property name="text">
+            <string>Скорость в режиме испытания (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QLineEdit" name="testSpeedIn"/>
+         </item>
+         <item row="10" column="2">
+          <widget class="QPushButton" name="testSpeedWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="3">
+          <widget class="QPushButton" name="testSpeedReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="4">
+          <widget class="QLineEdit" name="testSpeedOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QLabel" name="manualSpeedLabel">
+           <property name="text">
+            <string>Скорость в ручном режиме (INT16)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QLineEdit" name="manualSpeedIn"/>
+         </item>
+         <item row="11" column="2">
+          <widget class="QPushButton" name="manualSpeedWriteBtn">
+           <property name="text">
+            <string>Записать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="3">
+          <widget class="QPushButton" name="manualSpeedReadBtn">
+           <property name="text">
+            <string>Прочитать</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="4">
+          <widget class="QLineEdit" name="manualSpeedOut">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
