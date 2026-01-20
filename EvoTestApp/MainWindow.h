@@ -16,6 +16,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void setScale(int percent);
+
 private:
     Ui::MainWindow *ui;
+    QFont m_defaultFont;
 };
