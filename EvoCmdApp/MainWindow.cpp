@@ -62,6 +62,40 @@ MainWindow::MainWindow(QWidget *parent)
     connect(modbusDevice, &QModbusClient::errorOccurred, [this](QModbusDevice::Error) {
         ui->statusbar->showMessage("Modbus Error: " + modbusDevice->errorString());
     });
+
+    // чекбоксы вывода недоступны для пользователя
+    ui->startTestingOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->startTestingOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->stopOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->stopOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->moveTraverseUpOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->moveTraverseUpOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->moveTraverseDownOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->moveTraverseDownOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->startMmModeOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->startMmModeOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->stopMmModeOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->stopMmModeOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->moveUpMmModeOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->moveUpMmModeOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->moveDownMmModeOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->moveDownMmModeOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->useServoDriveOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->useServoDriveOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->useTopGripOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->useTopGripOut->setFocusPolicy(Qt::NoFocus);
+
+    ui->compressionModeOut->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->compressionModeOut->setFocusPolicy(Qt::NoFocus);
 }
 
 MainWindow::~MainWindow()
@@ -100,11 +134,9 @@ void MainWindow::onStateChanged(QModbusDevice::State state)
     if (state == QModbusDevice::ConnectedState) {
         ui->statusbar->showMessage("Подключено");
         ui->connectBtn->setText("Отключить");
-        ui->connectionGroup->setStyleSheet("QGroupBox { border: 1px solid green; }");
     } else if (state == QModbusDevice::UnconnectedState) {
         ui->statusbar->showMessage("Отключено");
         ui->connectBtn->setText("Подключить");
-        ui->connectionGroup->setStyleSheet("");
     }
 }
 

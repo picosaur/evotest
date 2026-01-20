@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>950</width>
-    <height>850</height>
+    <height>1034</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -87,11 +87,14 @@
           <layout class="QGridLayout" name="gridLayout">
            <item row="11" column="3">
             <widget class="QCheckBox" name="compressionModeOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -110,11 +113,14 @@
            </item>
            <item row="6" column="3">
             <widget class="QCheckBox" name="stopMmModeOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -127,11 +133,14 @@
            </item>
            <item row="3" column="3">
             <widget class="QCheckBox" name="moveTraverseUpOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -154,11 +163,14 @@
            </item>
            <item row="10" column="3">
             <widget class="QCheckBox" name="useTopGripOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -177,11 +189,14 @@
            </item>
            <item row="5" column="3">
             <widget class="QCheckBox" name="startMmModeOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -197,11 +212,14 @@
            </item>
            <item row="9" column="3">
             <widget class="QCheckBox" name="useServoDriveOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -214,11 +232,14 @@
            </item>
            <item row="2" column="3">
             <widget class="QCheckBox" name="stopOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -227,11 +248,14 @@
            </item>
            <item row="1" column="3">
             <widget class="QCheckBox" name="startTestingOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -257,21 +281,27 @@
            </item>
            <item row="8" column="3">
             <widget class="QCheckBox" name="moveDownMmModeOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item row="4" column="3">
             <widget class="QCheckBox" name="moveTraverseDownOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -297,11 +327,14 @@
            </item>
            <item row="7" column="3">
             <widget class="QCheckBox" name="moveUpMmModeOut">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="checkable">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
