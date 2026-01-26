@@ -11,8 +11,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialBus)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialBus)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialBus Qml)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialBus Qml)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -61,7 +61,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(EvoTestApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::SerialBus)
+target_link_libraries(EvoTestApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::SerialBus Qt${QT_VERSION_MAJOR}::Qml)
 
 set_target_properties(EvoTestApp PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

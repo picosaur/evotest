@@ -12,19 +12,9 @@
 
 namespace EvoData {
 
-enum class ModbusValueType { Int16, UInt16, Int32, UInt32, Float, Double };
-
-enum class ModbusByteOrder { ABCD, CDAB, BADC, DCBA };
-
-enum class Unit {};
-
-//
-// ============================================================================
-class SensorInfo
-{
-public:
-    QString id{};   // Уникальный ID (например "sensor_10kn")
-    QString name{}; // Имя для UI ("Датчик 10 кН №1")
+enum class ChannelType {
+    Modbus,
+    Script,
 };
 
 //
@@ -32,14 +22,10 @@ public:
 class ChannelInfo
 {
 public:
-    int id{};       // ID канала (0 - Нагрузка, 1 - Перемещение и т.д.)
+    QString id{};   // ID канала (0 - Нагрузка, 1 - Перемещение и т.д.)
     QString name{}; // Имя ("Нагрузка", "Время", "Деформация")
-    QString unit{}; // Единица ("кН", "мм", "с")
 
-    QModbusDataUnit::RegisterType modbusRegType{QModbusDataUnit::Invalid};
-    int modbusAddress{};
-    ModbusValueType modbusValueType{ModbusValueType::UInt16};
-    ModbusByteOrder modbusByteOrder{ModbusByteOrder::ABCD};
+    ChannelType channelType{};
 };
 
 //
@@ -47,7 +33,6 @@ public:
 class MachineConfig
 {
 public:
-    QVector<SensorInfo> availableSensors;
     QVector<ChannelInfo> availableChannels;
 
     // Метод для инициализации дефолтных значений (или загрузки из файла)

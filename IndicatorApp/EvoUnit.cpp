@@ -1,0 +1,480 @@
+#include "EvoUnit.h"
+#include <QLocale>
+#include <QMap>
+#include <QRegularExpression>
+#include <limits>
+#include <mutex>
+
+namespace EvoUnit {
+
+// Фиктивный класс для контекста перевода (чтобы работал tr() и lupdate)
+class TranslationContext
+{
+    Q_DECLARE_TR_FUNCTIONS(TranslationContext)
+};
+
+// Внутренняя структура реестра
+struct UnitEntry
+{
+    UnitDef def{};
+    UnitCategory category{UnitCategory::Unknown};
+    const char *nameKey{nullptr};
+    const char *symKey{nullptr};
+};
+
+static QMap<MeasUnit, UnitEntry> registry;
+
+// =========================================================================
+// Реализация UnitDef
+// =========================================================================
+UnitDef::UnitDef(double factor, double offset, Dimensions dim)
+    : m_factor{factor}
+    , m_offset{offset}
+    , m_dim{dim}
+{}
+
+UnitDef UnitDef::operator*(const UnitDef &other) const
+{
+    return UnitDef(m_factor * other.m_factor,
+                   0.0,
+                   {static_cast<int8_t>(m_dim.L + other.m_dim.L),
+                    static_cast<int8_t>(m_dim.M + other.m_dim.M),
+                    static_cast<int8_t>(m_dim.T + other.m_dim.T),
+                    static_cast<int8_t>(m_dim.Theta + other.m_dim.Theta)});
+}
+
+UnitDef UnitDef::operator/(const UnitDef &other) const
+{
+    return UnitDef(m_factor / other.m_factor,
+                   0.0,
+                   {static_cast<int8_t>(m_dim.L - other.m_dim.L),
+                    static_cast<int8_t>(m_dim.M - other.m_dim.M),
+                    static_cast<int8_t>(m_dim.T - other.m_dim.T),
+                    static_cast<int8_t>(m_dim.Theta - other.m_dim.Theta)});
+}
+
+UnitDef UnitDef::operator*(double scale) const
+{
+    return UnitDef(m_factor * scale, m_offset, m_dim);
+}
+
+// =========================================================================
+// Инициализация Реестра (Физика + Строки)
+// =========================================================================
+static void initRegistry()
+{
+    if (!registry.isEmpty())
+        return;
+
+    // --- БАЗОВЫЕ ЕДИНИЦЫ (СИ) ---
+    UnitDef m{1.0, 0.0, {1, 0, 0, 0}};  // Метр
+    UnitDef kg{1.0, 0.0, {0, 1, 0, 0}}; // Килограмм
+    UnitDef s{1.0, 0.0, {0, 0, 1, 0}};  // Секунда
+    UnitDef K{1.0, 0.0, {0, 0, 0, 1}};  // Кельвин
+
+    // --- ПРОИЗВОДНЫЕ ---
+
+    // Длина
+    UnitDef mm = m * 0.001;
+    UnitDef cm = m * 0.01;
+    UnitDef km = m * 1000.0;
+    UnitDef um = m * 1.0e-6;
+    UnitDef inch = m * 0.0254;
+    UnitDef ft = inch * 12.0;
+    UnitDef yd = ft * 3.0;
+
+    // Площадь (для явного расчета давления)
+    UnitDef mm2 = mm * mm;
+    UnitDef cm2 = cm * cm;
+    UnitDef inch2 = inch * inch;
+
+    // Время
+    UnitDef ms = s * 0.001;
+    UnitDef us = s * 1.0e-6;
+    UnitDef min = s * 60.0;
+    UnitDef hr = min * 60.0;
+    UnitDef day = hr * 24.0;
+
+    // Масса
+    UnitDef g_mass = kg * 0.001;
+    UnitDef lb = kg * 0.45359237;
+    UnitDef tonne = kg * 1000.0;
+
+    // Температура (Offset logic)
+    UnitDef degC{1.0, 273.15, {0, 0, 0, 1}};
+    UnitDef degF{5.0 / 9.0, 459.67, {0, 0, 0, 1}};
+
+    // Сила (F = ma)
+    UnitDef N = kg * m / (s * s);
+    UnitDef kN = N * 1000.0;
+    UnitDef MN = N * 1.0e6;
+
+    const double gravity{9.80665};
+    UnitDef kgf = N * gravity;
+    UnitDef gf = kgf * 0.001;
+    UnitDef tf = kgf * 1000.0;
+
+    UnitDef lbf = lb * gravity * m / (s * s);
+    UnitDef kip = lbf * 1000.0;
+
+    // Давление (P = F / S)
+    UnitDef Pa = N / (m * m);
+    UnitDef kPa = Pa * 1000.0;
+    UnitDef MPa = Pa * 1.0e6;
+    UnitDef GPa = Pa * 1.0e9;
+
+    UnitDef bar = Pa * 1.0e5;
+    UnitDef mbar = bar * 0.001;
+
+    UnitDef psi = lbf / inch2;
+    UnitDef ksi = psi * 1000.0;
+    UnitDef kgf_cm2 = kgf / cm2;
+    UnitDef atm = Pa * 101325.0;
+
+    // Скорость (L / T)
+    UnitDef m_sec = m / s;
+    UnitDef mm_min = mm / min;
+    UnitDef km_h = km / hr;
+    UnitDef inch_min = inch / min;
+
+    // Скорость нагружения
+    // Используем явный расчет через mm2 для N/mm²/s
+    UnitDef N_per_mm2 = N / mm2; // == MPa
+
+    UnitDef MPa_sec = MPa / s;
+    UnitDef psi_sec = psi / s;
+    UnitDef kN_sec = kN / s;
+    UnitDef N_mm2_sec = N_per_mm2 / s;
+
+    // Лямбда добавления
+    auto add = [](MeasUnit u, UnitDef d, UnitCategory cat, const char *sym, const char *name) {
+        registry.insert(u, {d, cat, name, sym});
+    };
+
+    // --- ЗАПОЛНЕНИЕ РЕЕСТРА ---
+
+    // ДЛИНА
+    add(MeasUnit::Millimeter, mm, UnitCategory::Length, QT_TR_NOOP("мм"), QT_TR_NOOP("Миллиметр"));
+    add(MeasUnit::Centimeter, cm, UnitCategory::Length, QT_TR_NOOP("см"), QT_TR_NOOP("Сантиметр"));
+    add(MeasUnit::Meter, m, UnitCategory::Length, QT_TR_NOOP("м"), QT_TR_NOOP("Метр"));
+    add(MeasUnit::Kilometer, km, UnitCategory::Length, QT_TR_NOOP("км"), QT_TR_NOOP("Километр"));
+    add(MeasUnit::Micrometer, um, UnitCategory::Length, QT_TR_NOOP("мкм"), QT_TR_NOOP("Микрометр"));
+    add(MeasUnit::Inch, inch, UnitCategory::Length, QT_TR_NOOP("дюйм"), QT_TR_NOOP("Дюйм"));
+    add(MeasUnit::Foot, ft, UnitCategory::Length, QT_TR_NOOP("фт"), QT_TR_NOOP("Фут"));
+    add(MeasUnit::Yard, yd, UnitCategory::Length, QT_TR_NOOP("ярд"), QT_TR_NOOP("Ярд"));
+
+    // ВРЕМЯ
+    add(MeasUnit::Second, s, UnitCategory::Time, QT_TR_NOOP("сек"), QT_TR_NOOP("Секунда"));
+    add(MeasUnit::Minute, min, UnitCategory::Time, QT_TR_NOOP("мин"), QT_TR_NOOP("Минута"));
+    add(MeasUnit::Hour, hr, UnitCategory::Time, QT_TR_NOOP("ч"), QT_TR_NOOP("Час"));
+    add(MeasUnit::Day, day, UnitCategory::Time, QT_TR_NOOP("дн"), QT_TR_NOOP("День"));
+    add(MeasUnit::Millisecond, ms, UnitCategory::Time, QT_TR_NOOP("мс"), QT_TR_NOOP("Миллисекунда"));
+    add(MeasUnit::Microsecond, us, UnitCategory::Time, QT_TR_NOOP("мкс"), QT_TR_NOOP("Микросекунда"));
+
+    // ТЕМПЕРАТУРА
+    add(MeasUnit::Kelvin, K, UnitCategory::Temperature, QT_TR_NOOP("K"), QT_TR_NOOP("Кельвин"));
+    add(MeasUnit::Celsius,
+        degC,
+        UnitCategory::Temperature,
+        QT_TR_NOOP("°C"),
+        QT_TR_NOOP("Градус Цельсия"));
+    add(MeasUnit::Fahrenheit,
+        degF,
+        UnitCategory::Temperature,
+        QT_TR_NOOP("°F"),
+        QT_TR_NOOP("Градус Фаренгейта"));
+
+    // МАССА
+    add(MeasUnit::Gram, g_mass, UnitCategory::Mass, QT_TR_NOOP("г"), QT_TR_NOOP("Грамм"));
+    add(MeasUnit::Kilogram, kg, UnitCategory::Mass, QT_TR_NOOP("кг"), QT_TR_NOOP("Килограмм"));
+    add(MeasUnit::Pound, lb, UnitCategory::Mass, QT_TR_NOOP("lb"), QT_TR_NOOP("Фунт"));
+    add(MeasUnit::Tonne, tonne, UnitCategory::Mass, QT_TR_NOOP("т"), QT_TR_NOOP("Тонна"));
+
+    // СИЛА
+    add(MeasUnit::Newton, N, UnitCategory::Force, QT_TR_NOOP("Н"), QT_TR_NOOP("Ньютон"));
+    add(MeasUnit::KiloNewton, kN, UnitCategory::Force, QT_TR_NOOP("кН"), QT_TR_NOOP("Килоньютон"));
+    add(MeasUnit::MegaNewton, MN, UnitCategory::Force, QT_TR_NOOP("МН"), QT_TR_NOOP("Меганьютон"));
+    add(MeasUnit::GramForce, gf, UnitCategory::Force, QT_TR_NOOP("гс"), QT_TR_NOOP("Грамм-сила"));
+    add(MeasUnit::KilogramForce,
+        kgf,
+        UnitCategory::Force,
+        QT_TR_NOOP("кгс"),
+        QT_TR_NOOP("Килограмм-сила"));
+    add(MeasUnit::TonForce, tf, UnitCategory::Force, QT_TR_NOOP("тс"), QT_TR_NOOP("Тонна-сила"));
+    add(MeasUnit::PoundForce, lbf, UnitCategory::Force, QT_TR_NOOP("lbf"), QT_TR_NOOP("Фунт-сила"));
+    add(MeasUnit::Kip, kip, UnitCategory::Force, QT_TR_NOOP("kip"), QT_TR_NOOP("Килофунт-сила"));
+
+    // ДАВЛЕНИЕ
+    add(MeasUnit::Pascal, Pa, UnitCategory::Pressure, QT_TR_NOOP("Па"), QT_TR_NOOP("Паскаль"));
+    add(MeasUnit::KiloPascal,
+        kPa,
+        UnitCategory::Pressure,
+        QT_TR_NOOP("кПа"),
+        QT_TR_NOOP("Килопаскаль"));
+    add(MeasUnit::MegaPascal,
+        MPa,
+        UnitCategory::Pressure,
+        QT_TR_NOOP("МПа"),
+        QT_TR_NOOP("Мегапаскаль"));
+    add(MeasUnit::GigaPascal,
+        GPa,
+        UnitCategory::Pressure,
+        QT_TR_NOOP("ГПа"),
+        QT_TR_NOOP("Гигапаскаль"));
+    add(MeasUnit::Bar, bar, UnitCategory::Pressure, QT_TR_NOOP("бар"), QT_TR_NOOP("Бар"));
+    add(MeasUnit::MilliBar, mbar, UnitCategory::Pressure, QT_TR_NOOP("мбар"), QT_TR_NOOP("Миллибар"));
+    add(MeasUnit::PSI, psi, UnitCategory::Pressure, QT_TR_NOOP("psi"), QT_TR_NOOP("PSI"));
+    add(MeasUnit::KSI, ksi, UnitCategory::Pressure, QT_TR_NOOP("ksi"), QT_TR_NOOP("KSI"));
+    add(MeasUnit::Kgf_per_CM2,
+        kgf_cm2,
+        UnitCategory::Pressure,
+        QT_TR_NOOP("кгс/см²"),
+        QT_TR_NOOP("Тех. атмосфера"));
+    add(MeasUnit::Atmosphere,
+        atm,
+        UnitCategory::Pressure,
+        QT_TR_NOOP("атм"),
+        QT_TR_NOOP("Атмосфера"));
+
+    // СКОРОСТЬ
+    add(MeasUnit::MM_per_Min,
+        mm_min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("мм/мин"),
+        QT_TR_NOOP("мм в минуту"));
+    add(MeasUnit::Meter_per_Sec,
+        m_sec,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("м/с"),
+        QT_TR_NOOP("м в секунду"));
+    add(MeasUnit::KM_per_Hour,
+        km_h,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("км/ч"),
+        QT_TR_NOOP("км в час"));
+    add(MeasUnit::Inch_per_Min,
+        inch_min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("in/min"),
+        QT_TR_NOOP("дюйм в минуту"));
+
+    // СКОРОСТЬ НАГРУЖЕНИЯ
+    add(MeasUnit::MegaPascal_per_Sec,
+        MPa_sec,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("МПа/с"),
+        QT_TR_NOOP("МПа в секунду"));
+    add(MeasUnit::Newton_per_MM2_per_Sec,
+        N_mm2_sec,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("Н/мм²/с"),
+        QT_TR_NOOP("Н/мм² в секунду"));
+    add(MeasUnit::PSI_per_Sec,
+        psi_sec,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("psi/s"),
+        QT_TR_NOOP("psi в секунду"));
+    add(MeasUnit::KiloNewton_per_Sec,
+        kN_sec,
+        UnitCategory::ForceRate,
+        QT_TR_NOOP("кН/с"),
+        QT_TR_NOOP("кН в секунду"));
+}
+
+// Внутренний хелпер доступа к реестру
+const UnitEntry &getEntry(MeasUnit u)
+{
+    static std::once_flag flag;
+    std::call_once(flag, initRegistry);
+    if (registry.contains(u))
+        return registry[u];
+    static UnitEntry unknown{UnitDef(), UnitCategory::Unknown, "?", "?"};
+    return unknown;
+}
+
+// =========================================================================
+// Реализация функций API
+// =========================================================================
+
+bool isCompatible(MeasUnit u1, MeasUnit u2)
+{
+    return getEntry(u1).def.dimensions() == getEntry(u2).def.dimensions();
+}
+
+double convert(double val, MeasUnit from, MeasUnit to)
+{
+    if (from == to)
+        return val;
+    Converter conv(from, to);
+    if (!conv.isValid())
+        return std::numeric_limits<double>::quiet_NaN();
+    return conv.process(val);
+}
+
+UnitCategory category(MeasUnit u)
+{
+    return getEntry(u).category;
+}
+
+QList<MeasUnit> unitsByType(UnitCategory type)
+{
+    static std::once_flag flag;
+    std::call_once(flag, initRegistry);
+    QList<MeasUnit> result;
+    auto i = registry.constBegin();
+    while (i != registry.constEnd()) {
+        if (i.value().category == type)
+            result.append(i.key());
+        ++i;
+    }
+    return result;
+}
+
+QString symbol(MeasUnit u)
+{
+    return QCoreApplication::translate("EvoUnit::TranslationContext", getEntry(u).symKey);
+}
+
+QString name(MeasUnit u)
+{
+    return QCoreApplication::translate("EvoUnit::TranslationContext", getEntry(u).nameKey);
+}
+
+QString format(double value, MeasUnit u, int precision)
+{
+    return QLocale::system().toString(value, 'f', precision) + " " + symbol(u);
+}
+
+ParsedValue parse(const QString &input)
+{
+    static QRegularExpression re("^([-+]?[0-9]*\\.?[0-9]+)\\s*(.*)$");
+    QRegularExpressionMatch match = re.match(input.trimmed().replace(',', '.'));
+
+    if (!match.hasMatch())
+        return {0.0, MeasUnit::Unknown, false};
+
+    double val = match.captured(1).toDouble();
+    QString sym = match.captured(2).trimmed();
+
+    static std::once_flag flag;
+    std::call_once(flag, initRegistry);
+
+    for (auto it = registry.constBegin(); it != registry.constEnd(); ++it) {
+        if (symbol(it.key()).compare(sym, Qt::CaseInsensitive) == 0) {
+            return {val, it.key(), true};
+        }
+    }
+    return {val, MeasUnit::Unknown, false};
+}
+
+QPair<double, MeasUnit> autoScale(double value, MeasUnit currentUnit)
+{
+    UnitCategory cat = category(currentUnit);
+    if (cat == UnitCategory::Unknown || cat == UnitCategory::Temperature)
+        return {value, currentUnit};
+
+    const QList<MeasUnit> candidates = unitsByType(cat);
+
+    MeasUnit bestUnit{currentUnit};
+    double bestVal{value};
+    double bestScore{std::numeric_limits<double>::max()};
+
+    for (const auto &u : candidates) {
+        double v = convert(value, currentUnit, u);
+        double absV = std::abs(v);
+        if (absV >= 1.0 && absV < 1000.0)
+            return {v, u};
+
+        if (absV >= 1.0 && absV < bestScore) {
+            bestScore = absV;
+            bestVal = v;
+            bestUnit = u;
+        }
+    }
+    return {bestVal, bestUnit};
+}
+
+// =========================================================================
+// Реализация Converter
+// =========================================================================
+Converter::Converter(MeasUnit from, MeasUnit to)
+    : m_valid{false}
+{
+    if (!isCompatible(from, to)) {
+        m_slope = 1.0;
+        m_offset = 0.0;
+        return;
+    }
+    const auto &dFrom = getEntry(from).def;
+    const auto &dTo = getEntry(to).def;
+
+    double ratio = dFrom.factor() / dTo.factor();
+    m_slope = ratio;
+    // Корректная логика offset:
+    // val_base = (val_src + off_src) * f_src
+    // val_dst = (val_base / f_dst) - off_dst
+    // val_dst = val_src * (f_src/f_dst) + (off_src * f_src / f_dst) - off_dst
+    m_offset = (dFrom.offset() * ratio) - dTo.offset();
+    m_valid = true;
+}
+
+QDebug operator<<(QDebug dbg, MeasUnit u)
+{
+    QDebugStateSaver saver(dbg);
+    dbg.nospace() << "MeasUnit(" << EvoUnit::symbol(u) << ")";
+    return dbg;
+}
+
+// =========================================================================
+// Реализация JsGateway
+// =========================================================================
+JsGateway::JsGateway(QObject *parent)
+    : QObject(parent)
+{}
+
+double JsGateway::convert(double val, EvoUnit::MeasUnit from, EvoUnit::MeasUnit to)
+{
+    return EvoUnit::convert(val, from, to);
+}
+
+QString JsGateway::format(double val, EvoUnit::MeasUnit u, int precision)
+{
+    return EvoUnit::format(val, u, precision);
+}
+
+QString JsGateway::symbol(EvoUnit::MeasUnit u)
+{
+    return EvoUnit::symbol(u);
+}
+
+QString JsGateway::name(EvoUnit::MeasUnit u)
+{
+    return EvoUnit::name(u);
+}
+
+EvoUnit::UnitCategory JsGateway::category(EvoUnit::MeasUnit u)
+{
+    return EvoUnit::category(u);
+}
+
+QVariantList JsGateway::unitsByType(EvoUnit::UnitCategory type)
+{
+    QVariantList list;
+    const auto units = EvoUnit::unitsByType(type);
+    for (const auto &u : units) {
+        list.append(QVariant::fromValue(u));
+    }
+    return list;
+}
+
+QVariantMap JsGateway::parse(const QString &input)
+{
+    auto p = EvoUnit::parse(input);
+    QVariantMap map;
+    map["value"] = p.value;
+    map["unit"] = QVariant::fromValue(p.unit);
+    map["valid"] = p.valid;
+    return map;
+}
+
+} // namespace EvoUnit
