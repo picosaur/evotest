@@ -42,6 +42,10 @@ else()
     else()
         add_executable(IndicatorApp
             ${PROJECT_SOURCES}
+            GuiSourceConfig.h GuiSourceConfig.cpp
+            GuiFormulaConfig.h GuiFormulaConfig.cpp
+            GuiDashboard.h GuiDashboard.cpp
+            EvoGui.h
         )
     endif()
 endif()

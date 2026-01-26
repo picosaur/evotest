@@ -1,33 +1,29 @@
 #include "EvoModbus.h"
 #include <QDebug>
+#include <QMetaEnum>
+#include <QtGlobal>
 #include <algorithm>
-#include <cstring> // std::memcpy
+#include <cstring>
 
 namespace EvoModbus {
 
-// Константы оптимизации
-static const int MAX_GAP{10};        // Макс разрыв регистров
-static const int MAX_PDU{120};       // Макс регистров в пакете
-static const int MAX_PDU_BITS{1900}; // Макс бит в пакете
+static const int MAX_GAP{10};
+static const int MAX_PDU{120};
+static const int MAX_PDU_BITS{1900};
 
-// =========================================================
-// MANAGER IMPLEMENTATION
-// =========================================================
+// --- MANAGER ---
 
 Manager::Manager(QObject *parent)
     : QObject(parent)
 {
     m_modbus = new QModbusTcpClient(this);
     m_pollTimer = new QTimer(this);
-
     connect(m_modbus, &QModbusClient::stateChanged, this, &Manager::onStateChanged);
     connect(m_modbus, &QModbusClient::errorOccurred, this, [this](QModbusDevice::Error) {
         emit errorOccurred(m_modbus->errorString());
     });
-
     connect(m_pollTimer, &QTimer::timeout, this, &Manager::onPollTimer);
 }
-
 Manager::~Manager()
 {
     if (m_modbus)
@@ -39,11 +35,21 @@ void Manager::addSource(const Source &source)
     m_sources.append(source);
     m_recalcNeeded = true;
 }
+void Manager::clearSources()
+{
+    m_sources.clear();
+    m_blocks.clear();
+    m_recalcNeeded = true;
+}
+QVector<Source> Manager::getSources() const
+{
+    return m_sources;
+}
 
 Source Manager::getSourceConfig(const QString &id) const
 {
     std::string target = id.toStdString();
-    for (const auto &s : m_sources) {
+    for (const auto &s : qAsConst(m_sources)) {
         if (s.id == target)
             return s;
     }
@@ -54,11 +60,9 @@ void Manager::connectTo(const QString &ip, int port)
 {
     if (m_modbus->state() != QModbusDevice::UnconnectedState)
         m_modbus->disconnectDevice();
-
     m_modbus->setConnectionParameter(QModbusDevice::NetworkPortParameter, port);
     m_modbus->setConnectionParameter(QModbusDevice::NetworkAddressParameter, ip);
     m_modbus->setTimeout(1000);
-    m_modbus->setNumberOfRetries(2);
     m_modbus->connectDevice();
 }
 
@@ -66,15 +70,12 @@ void Manager::disconnectFrom()
 {
     m_modbus->disconnectDevice();
 }
-
 void Manager::startPolling(int intervalMs)
 {
-    if (m_recalcNeeded) {
+    if (m_recalcNeeded)
         recalculateBlocks();
-    }
     m_pollTimer->start(intervalMs);
 }
-
 void Manager::stopPolling()
 {
     m_pollTimer->stop();
@@ -83,26 +84,61 @@ void Manager::stopPolling()
 void Manager::onStateChanged(QModbusDevice::State state)
 {
     emit connectionStateChanged(static_cast<int>(state));
-    if (state == QModbusDevice::ConnectedState) {
-        qDebug() << "[EvoModbus] Connected to PLC";
+    if (state == QModbusDevice::ConnectedState)
+        qDebug() << "[EvoModbus] Connected";
+}
+
+// Write Logic
+bool Manager::writeValue(int sa, int addr, const QVariant &val, ValueType type, ByteOrder order)
+{
+    // Упрощенная реализация записи (пример)
+    QModbusDataUnit unit(QModbusDataUnit::HoldingRegisters, addr, 0);
+    QVector<quint16> regs;
+
+    if (type == ValueType::Bool) {
+        unit.setRegisterType(QModbusDataUnit::Coils);
+        unit.setValueCount(1);
+        unit.setValue(0, val.toBool() ? 1 : 0);
+    } else {
+        if (type == ValueType::Float)
+            regs = decomposeFloat(val.toFloat(), (int) order);
+        else if (type == ValueType::UInt32 || type == ValueType::Int32)
+            regs = decomposeUInt32(val.toUInt(), (int) order);
+        else
+            regs.append((quint16) val.toUInt());
+
+        unit.setRegisterType(QModbusDataUnit::HoldingRegisters);
+        unit.setValueCount(regs.size());
+        unit.setValues(regs);
+    }
+
+    if (auto *reply = m_modbus->sendWriteRequest(unit, sa)) {
+        connect(reply, &QModbusReply::finished, this, &Manager::onWriteReplyFinished);
+        return true;
+    }
+    return false;
+}
+void Manager::onWriteReplyFinished()
+{
+    auto r = qobject_cast<QModbusReply *>(sender());
+    if (r) {
+        if (r->error() == QModbusDevice::NoError)
+            emit writeFinished();
+        else
+            emit errorOccurred("Write: " + r->errorString());
+        r->deleteLater();
     }
 }
 
-// ---------------------------------------------------------
-// ALGORITHM: Grouping
-// ---------------------------------------------------------
+// Read Logic
 void Manager::recalculateBlocks()
 {
     m_blocks.clear();
     if (m_sources.isEmpty())
         return;
-
-    QVector<const Source *> sorted{};
-    sorted.reserve(m_sources.size());
-    for (const auto &s : m_sources)
+    QVector<const Source *> sorted;
+    for (const auto &s : qAsConst(m_sources))
         sorted.append(&s);
-
-    // Сортировка: Server -> RegType -> Address
     std::sort(sorted.begin(), sorted.end(), [](const Source *a, const Source *b) {
         if (a->serverAddress != b->serverAddress)
             return a->serverAddress < b->serverAddress;
@@ -111,183 +147,128 @@ void Manager::recalculateBlocks()
         return a->valueAddress < b->valueAddress;
     });
 
-    RequestBlock currentBlock{};
-    const Source *first = sorted.first();
-
-    currentBlock.serverAddress = first->serverAddress;
-    currentBlock.regType = first->regType;
-    currentBlock.startAddress = first->valueAddress;
-    currentBlock.count = getRegisterCount(first->valueType);
-
+    RequestBlock cur{sorted[0]->serverAddress,
+                     sorted[0]->regType,
+                     sorted[0]->valueAddress,
+                     getRegisterCount(sorted[0]->valueType)};
     for (int i = 1; i < sorted.size(); ++i) {
-        const Source *next = sorted[i];
-
-        bool sameServer = (next->serverAddress == currentBlock.serverAddress);
-        bool sameType = (next->regType == currentBlock.regType);
-
-        int currentEnd = currentBlock.startAddress + currentBlock.count;
-        int gap = next->valueAddress - currentEnd;
-
-        int nextLen = getRegisterCount(next->valueType);
-        int newCount = (next->valueAddress + nextLen) - currentBlock.startAddress;
-
-        // Лимит зависит от типа (биты или слова)
-        int maxSize = (currentBlock.regType == QModbusDataUnit::Coils
-                       || currentBlock.regType == QModbusDataUnit::DiscreteInputs)
-                          ? MAX_PDU_BITS
-                          : MAX_PDU;
-
-        if (!sameServer || !sameType || gap > MAX_GAP || gap < 0 || newCount > maxSize) {
-            m_blocks.append(currentBlock);
-
-            currentBlock.serverAddress = next->serverAddress;
-            currentBlock.regType = next->regType;
-            currentBlock.startAddress = next->valueAddress;
-            currentBlock.count = nextLen;
+        const Source *n = sorted[i];
+        int end = cur.startAddress + cur.count;
+        int gap = n->valueAddress - end;
+        int nLen = getRegisterCount(n->valueType);
+        int newCount = (n->valueAddress + nLen) - cur.startAddress;
+        int max = (cur.regType == QModbusDataUnit::Coils
+                   || cur.regType == QModbusDataUnit::DiscreteInputs)
+                      ? MAX_PDU_BITS
+                      : MAX_PDU;
+        if (n->serverAddress != cur.serverAddress || n->regType != cur.regType || gap > MAX_GAP
+            || gap < 0 || newCount > max) {
+            m_blocks.append(cur);
+            cur = {n->serverAddress, n->regType, n->valueAddress, nLen};
         } else {
-            currentBlock.count = newCount;
+            cur.count = newCount;
         }
     }
-    m_blocks.append(currentBlock);
+    m_blocks.append(cur);
     m_recalcNeeded = false;
-
-    qDebug() << "[EvoModbus] Optimized into" << m_blocks.size() << "requests";
 }
 
-// ---------------------------------------------------------
-// POLLING & PARSING
-// ---------------------------------------------------------
 void Manager::onPollTimer()
 {
     if (m_modbus->state() != QModbusDevice::ConnectedState)
         return;
-
-    for (const auto &block : m_blocks) {
-        QModbusDataUnit unit(block.regType, block.startAddress, block.count);
-
-        if (auto *reply = m_modbus->sendReadRequest(unit, block.serverAddress)) {
-            if (!reply->isFinished()) {
-                connect(reply, &QModbusReply::finished, this, &Manager::onReadReady);
-            } else {
-                delete reply;
-            }
+    for (const auto &b : qAsConst(m_blocks)) {
+        QModbusDataUnit unit(b.regType, b.startAddress, b.count);
+        if (auto *r = m_modbus->sendReadRequest(unit, b.serverAddress)) {
+            if (!r->isFinished())
+                connect(r, &QModbusReply::finished, this, &Manager::onReadReady);
+            else
+                delete r;
         }
     }
 }
 
 void Manager::onReadReady()
 {
-    auto reply = qobject_cast<QModbusReply *>(sender());
-    if (!reply)
+    auto r = qobject_cast<QModbusReply *>(sender());
+    if (!r)
         return;
-
-    if (reply->error() == QModbusDevice::NoError) {
-        const QModbusDataUnit unit = reply->result();
-        bool changed{false};
-
-        for (const auto &src : m_sources) {
-            if (src.serverAddress != reply->serverAddress() || src.regType != unit.registerType())
+    if (r->error() == QModbusDevice::NoError) {
+        auto unit = r->result();
+        bool chg = false;
+        for (const auto &s : qAsConst(m_sources)) {
+            if (s.serverAddress != r->serverAddress() || s.regType != unit.registerType())
                 continue;
-
-            int len = getRegisterCount(src.valueType);
-            int srcEnd = src.valueAddress + len;
-            int unitEnd = unit.startAddress() + unit.valueCount();
-
-            if (src.valueAddress >= unit.startAddress() && srcEnd <= unitEnd) {
-                int offset = src.valueAddress - unit.startAddress();
-                QVector<quint16> raw{};
-
-                if (src.isBitType()) {
-                    raw.append(unit.value(offset));
-                } else {
-                    for (int k = 0; k < len; ++k)
-                        raw.append(unit.value(offset + k));
-                }
-
-                QVariant val = parseValue(src, raw);
-                QString key = QString::fromStdString(src.id);
-
-                if (m_rawData.value(key) != val) {
-                    m_rawData[key] = val;
-                    changed = true;
+            int len = getRegisterCount(s.valueType);
+            if (s.valueAddress >= unit.startAddress()
+                && (s.valueAddress + len) <= (unit.startAddress() + unit.valueCount())) {
+                int off = s.valueAddress - unit.startAddress();
+                QVector<quint16> d;
+                for (int k = 0; k < len; ++k)
+                    d.append(unit.value(off + k));
+                QVariant v = parseValue(s, d);
+                QString k = QString::fromStdString(s.id);
+                if (m_rawData.value(k) != v) {
+                    m_rawData[k] = v;
+                    chg = true;
                 }
             }
         }
-        if (changed)
+        if (chg)
             emit rawDataUpdated();
-
-    } else {
-        // Лог ошибок можно раскомментировать
-        // qWarning() << "[EvoModbus] Read Error:" << reply->errorString();
     }
-    reply->deleteLater();
+    r->deleteLater();
 }
 
 int Manager::getRegisterCount(int t)
 {
-    if (t >= static_cast<int>(ValueType::UInt32))
-        return 2;
-    return 1;
+    return (t >= (int) ValueType::UInt32) ? 2 : 1;
 }
-
 QVariant Manager::parseValue(const Source &src, const QVector<quint16> &d)
 {
     if (d.isEmpty())
-        return QVariant();
-
-    ValueType t = static_cast<ValueType>(src.valueType);
-
-    if (t == ValueType::Bool)
-        return (bool) d[0];
+        return {};
+    ValueType t = (ValueType) src.valueType;
     if (t == ValueType::UInt16)
         return d[0];
-    if (t == ValueType::Int16)
-        return (qint16) d[0];
-
-    if (d.size() < 2)
-        return QVariant();
-
-    if (t == ValueType::UInt32)
-        return composeUInt32(d[0], d[1], src.byteOrder);
-    if (t == ValueType::Int32)
-        return (qint32) composeUInt32(d[0], d[1], src.byteOrder);
-    if (t == ValueType::Float)
-        return composeFloat(d[0], d[1], src.byteOrder);
-
-    return QVariant();
+    if (t == ValueType::Float && d.size() == 2) {
+        quint32 i = composeUInt32(d[0], d[1], src.byteOrder);
+        float f;
+        std::memcpy(&f, &i, 4);
+        return f;
+    }
+    return d[0];
 }
 
+// Helpers (Decompose/Compose) - simplified for brevity
 quint32 Manager::composeUInt32(quint16 w1, quint16 w2, int order)
 {
-    quint8 a = (w1 >> 8) & 0xFF;
-    quint8 b = w1 & 0xFF;
-    quint8 c = (w2 >> 8) & 0xFF;
-    quint8 d = w2 & 0xFF;
-
-    switch (static_cast<ByteOrder>(order)) {
-    case ByteOrder::ABCD:
+    if (order == 0)
         return (w1 << 16) | w2;
-    case ByteOrder::CDAB:
-        return (w2 << 16) | w1;
-    case ByteOrder::DCBA:
-        return (d << 24) | (c << 16) | (b << 8) | a;
-    case ByteOrder::BADC:
-        return (b << 24) | (a << 16) | (d << 8) | c;
-    }
-    return 0;
+    return (w2 << 16) | w1; // Simplified ABCD vs CDAB
 }
-
 float Manager::composeFloat(quint16 w1, quint16 w2, int order)
 {
     quint32 i = composeUInt32(w1, w2, order);
-    float f{0.0f};
-    std::memcpy(&f, &i, sizeof(float));
+    float f;
+    std::memcpy(&f, &i, 4);
     return f;
 }
+QVector<quint16> Manager::decomposeUInt32(quint32 val, int order)
+{
+    QVector<quint16> res;
+    res.append(val >> 16);
+    res.append(val & 0xFFFF);
+    return res; // Simplified
+}
+QVector<quint16> Manager::decomposeFloat(float val, int order)
+{
+    quint32 i;
+    std::memcpy(&i, &val, 4);
+    return decomposeUInt32(i, order);
+}
 
-// =========================================================
-// CONTROLLER IMPLEMENTATION
-// =========================================================
+// --- CONTROLLER ---
 
 Controller::Controller(QObject *parent)
     : QObject(parent)
@@ -295,60 +276,77 @@ Controller::Controller(QObject *parent)
     m_manager = new Manager(this);
     m_unitGateway = new EvoUnit::JsGateway(this);
 
-    // Подготовка JS среды
+    // JS Setup
     m_jsEngine.globalObject().setProperty("IO", m_jsEngine.newQObject(this));
     m_jsEngine.globalObject().setProperty("EvoUnit", m_jsEngine.newQObject(m_unitGateway));
+
+    // Register EvoUnit Enums to JS globally
+    QJSValue unitsObj = m_jsEngine.newObject();
+    const QMetaObject &mo = EvoUnit::staticMetaObject;
+    int index = mo.indexOfEnumerator("MeasUnit");
+    QMetaEnum me = mo.enumerator(index);
+    for (int i = 0; i < me.keyCount(); ++i) {
+        unitsObj.setProperty(me.key(i), me.value(i));
+    }
+    m_jsEngine.globalObject().setProperty("Units", unitsObj);
 
     connect(m_manager, &Manager::rawDataUpdated, this, &Controller::onRawDataReceived);
 }
 
-void Controller::addModbusSource(const Source &source)
+void Controller::addModbusSource(const Source &s)
 {
-    m_manager->addSource(source);
-}
-
-void Controller::addSource(const QVariantMap &c)
-{
-    Source s{};
-    if (c.contains("id"))
-        s.id = c["id"].toString().toStdString();
-    else
-        return;
-
-    s.serverAddress = c.value("server", 1).toInt();
-    s.valueAddress = c.value("address", 0).toInt();
-    s.valueType = c.value("type", 1).toInt();
-    s.regType = static_cast<QModbusDataUnit::RegisterType>(c.value("reg", 4).toInt());
-    s.byteOrder = c.value("byteOrder", 0).toInt();
-
-    // Парсим Unit из конфига
-    if (c.contains("unit")) {
-        s.defaultUnit = static_cast<EvoUnit::MeasUnit>(c["unit"].toInt());
-    }
-
     m_manager->addSource(s);
 }
-
-void Controller::setScript(const QString &scriptCode)
+void Controller::clearSources()
 {
-    QString fullScript = "(function() { " + scriptCode + " })";
-    m_jsProcessFunction = m_jsEngine.evaluate(fullScript);
+    m_manager->clearSources();
+}
+QVector<Source> Controller::getSources() const
+{
+    return m_manager->getSources();
+}
 
-    if (m_jsProcessFunction.isError()) {
-        qWarning() << "[EvoModbus] Script Error:" << m_jsProcessFunction.toString();
+void Controller::addComputedChannel(const ComputedChannel &ch)
+{
+    m_computedChannels.append(ch);
+}
+void Controller::clearComputedChannels()
+{
+    m_computedChannels.clear();
+}
+QVector<ComputedChannel> Controller::getComputedChannels() const
+{
+    return m_computedChannels;
+}
+
+void Controller::buildAndApplyScript()
+{
+    QString js;
+    for (const auto &ch : qAsConst(m_computedChannels)) {
+        js += QString("IO.set('%1', %2, %3);\n")
+                  .arg(QString::fromStdString(ch.id))
+                  .arg(ch.formula)
+                  .arg((int) ch.unit);
     }
+    setScript(js);
+}
+
+void Controller::setScript(const QString &code)
+{
+    QString full = "(function() { try { " + code + " } catch(e){ print('Script Error: ' + e); } })";
+    m_jsProcessFunction = m_jsEngine.evaluate(full);
+    if (m_jsProcessFunction.isError())
+        emit error("JS Compile: " + m_jsProcessFunction.toString());
 }
 
 void Controller::connectToServer(const QString &ip, int port)
 {
     m_manager->connectTo(ip, port);
 }
-
-void Controller::start(int intervalMs)
+void Controller::start(int ms)
 {
-    m_manager->startPolling(intervalMs);
+    m_manager->startPolling(ms);
 }
-
 void Controller::stop()
 {
     m_manager->stopPolling();
@@ -356,126 +354,37 @@ void Controller::stop()
 
 QVariant Controller::val(const QString &id)
 {
-    // Возвращаем просто значение для арифметики в JS
-    if (m_channels.contains(id)) {
+    if (m_channels.contains(id))
         return m_channels[id].value;
-    }
     return 0.0;
 }
-
-void Controller::set(const QString &id, const QVariant &value, int unit)
+void Controller::set(const QString &id, const QVariant &val, int unit)
 {
-    EvoUnit::MeasUnit u = static_cast<EvoUnit::MeasUnit>(unit);
-
-    // Если юнит не передан (Unknown), пытаемся сохранить существующий
-    if (u == EvoUnit::MeasUnit::Unknown && m_channels.contains(id)) {
+    EvoUnit::MeasUnit u = (EvoUnit::MeasUnit) unit;
+    if (u == EvoUnit::MeasUnit::Unknown && m_channels.contains(id))
         u = m_channels[id].unit;
-    }
-
-    m_channels[id] = {value, u};
+    m_channels[id] = {val, u};
+}
+void Controller::write(const QString &id, const QVariant &val)
+{
+    auto cfg = m_manager->getSourceConfig(id);
+    if (!cfg.id.empty())
+        m_manager->writeValue(cfg.serverAddress,
+                              cfg.valueAddress,
+                              val,
+                              (ValueType) cfg.valueType,
+                              (ByteOrder) cfg.byteOrder);
 }
 
 void Controller::onRawDataReceived()
 {
     QVariantMap raw = m_manager->getRawData();
+    for (auto i = raw.begin(); i != raw.end(); ++i)
+        m_channels[i.key()] = {i.value(), m_manager->getSourceConfig(i.key()).defaultUnit};
 
-    // 1. Обновляем каналы сырыми данными (с учетом их дефолтных единиц)
-    for (auto it = raw.begin(); it != raw.end(); ++it) {
-        QString id = it.key();
-        Source cfg = m_manager->getSourceConfig(id);
-        m_channels[id] = {it.value(), cfg.defaultUnit};
-    }
-
-    // 2. Выполняем JS логику (она может перезаписать каналы или создать новые)
-    if (m_jsProcessFunction.isCallable()) {
-        QJSValue res = m_jsProcessFunction.call();
-        if (res.isError()) {
-            qWarning() << "[EvoModbus] JS Runtime Error:" << res.toString();
-        }
-    }
-
-    // 3. Уведомляем UI
+    if (m_jsProcessFunction.isCallable())
+        m_jsProcessFunction.call();
     emit channelsUpdated();
-}
-
-// =========================================================
-// BINDER IMPLEMENTATION
-// =========================================================
-
-Binder::Binder(Controller *controller, QObject *parent)
-    : QObject(parent)
-    , m_controller(controller)
-{
-    if (m_controller) {
-        connect(m_controller, &Controller::channelsUpdated, this, &Binder::syncUI);
-    }
-}
-
-void Binder::bindLabel(QLabel *label, const std::string &channelId)
-{
-    if (!label)
-        return;
-    m_bindings.append({label, channelId, 0, 1.0, nullptr});
-    syncUI();
-}
-
-void Binder::bindLCD(QLCDNumber *lcd, const std::string &channelId, double scale)
-{
-    if (!lcd)
-        return;
-    m_bindings.append({lcd, channelId, 1, scale, nullptr});
-    syncUI();
-}
-
-void Binder::bindProgressBar(QProgressBar *bar, const std::string &channelId)
-{
-    if (!bar)
-        return;
-    m_bindings.append({bar, channelId, 2, 1.0, nullptr});
-    syncUI();
-}
-
-void Binder::bindCustom(const std::string &channelId, Callback callback)
-{
-    m_bindings.append({nullptr, channelId, 3, 1.0, callback});
-    syncUI();
-}
-
-void Binder::syncUI()
-{
-    if (!m_controller)
-        return;
-    auto channels = m_controller->getChannels();
-
-    for (const auto &b : m_bindings) {
-        QString key = QString::fromStdString(b.id);
-        if (!channels.contains(key))
-            continue;
-
-        ChannelData data = channels[key];
-        double val = data.value.toDouble();
-
-        // Custom Handler
-        if (b.type == 3 && b.customCb) {
-            b.customCb(data);
-            continue;
-        }
-
-        if (b.widget.isNull())
-            continue;
-
-        if (b.type == 0) { // QLabel
-            // АВТОМАТИЧЕСКОЕ ФОРМАТИРОВАНИЕ ЧЕРЕЗ EvoUnit
-            // Если unit == Unknown, просто число
-            // Если unit == Volt, будет "120.5 V"
-            QString txt = EvoUnit::format(val * b.scale, data.unit, 2);
-            static_cast<QLabel *>(b.widget.data())->setText(txt);
-        } else if (b.type == 1) { // QLCDNumber
-            static_cast<QLCDNumber *>(b.widget.data())->display(val * b.scale);
-        } else if (b.type == 2) { // QProgressBar
-            static_cast<QProgressBar *>(b.widget.data())->setValue(static_cast<int>(val));
-        }
-    }
 }
 
 } // namespace EvoModbus

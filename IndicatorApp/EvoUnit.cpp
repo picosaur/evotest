@@ -7,13 +7,11 @@
 
 namespace EvoUnit {
 
-// Фиктивный класс для контекста перевода (чтобы работал tr() и lupdate)
 class TranslationContext
 {
     Q_DECLARE_TR_FUNCTIONS(TranslationContext)
 };
 
-// Внутренняя структура реестра
 struct UnitEntry
 {
     UnitDef def{};
@@ -40,7 +38,8 @@ UnitDef UnitDef::operator*(const UnitDef &other) const
                    {static_cast<int8_t>(m_dim.L + other.m_dim.L),
                     static_cast<int8_t>(m_dim.M + other.m_dim.M),
                     static_cast<int8_t>(m_dim.T + other.m_dim.T),
-                    static_cast<int8_t>(m_dim.Theta + other.m_dim.Theta)});
+                    static_cast<int8_t>(m_dim.Theta + other.m_dim.Theta),
+                    static_cast<int8_t>(m_dim.I + other.m_dim.I)});
 }
 
 UnitDef UnitDef::operator/(const UnitDef &other) const
@@ -50,7 +49,8 @@ UnitDef UnitDef::operator/(const UnitDef &other) const
                    {static_cast<int8_t>(m_dim.L - other.m_dim.L),
                     static_cast<int8_t>(m_dim.M - other.m_dim.M),
                     static_cast<int8_t>(m_dim.T - other.m_dim.T),
-                    static_cast<int8_t>(m_dim.Theta - other.m_dim.Theta)});
+                    static_cast<int8_t>(m_dim.Theta - other.m_dim.Theta),
+                    static_cast<int8_t>(m_dim.I - other.m_dim.I)});
 }
 
 UnitDef UnitDef::operator*(double scale) const
@@ -59,7 +59,7 @@ UnitDef UnitDef::operator*(double scale) const
 }
 
 // =========================================================================
-// Инициализация Реестра (Физика + Строки)
+// ИНИЦИАЛИЗАЦИЯ РЕЕСТРА
 // =========================================================================
 static void initRegistry()
 {
@@ -67,44 +67,51 @@ static void initRegistry()
         return;
 
     // --- БАЗОВЫЕ ЕДИНИЦЫ (СИ) ---
-    UnitDef m{1.0, 0.0, {1, 0, 0, 0}};  // Метр
-    UnitDef kg{1.0, 0.0, {0, 1, 0, 0}}; // Килограмм
-    UnitDef s{1.0, 0.0, {0, 0, 1, 0}};  // Секунда
-    UnitDef K{1.0, 0.0, {0, 0, 0, 1}};  // Кельвин
+    UnitDef m{1.0, 0.0, {1, 0, 0, 0, 0}};  // Метр
+    UnitDef kg{1.0, 0.0, {0, 1, 0, 0, 0}}; // Килограмм
+    UnitDef s{1.0, 0.0, {0, 0, 1, 0, 0}};  // Секунда
+    UnitDef K{1.0, 0.0, {0, 0, 0, 1, 0}};  // Кельвин
+    UnitDef A{1.0, 0.0, {0, 0, 0, 0, 1}};  // Ампер
 
-    // --- ПРОИЗВОДНЫЕ ---
-
-    // Длина
+    // --- 1. ДЛИНА ---
     UnitDef mm = m * 0.001;
     UnitDef cm = m * 0.01;
+    UnitDef dm = m * 0.1;
     UnitDef km = m * 1000.0;
     UnitDef um = m * 1.0e-6;
+
     UnitDef inch = m * 0.0254;
     UnitDef ft = inch * 12.0;
     UnitDef yd = ft * 3.0;
+    UnitDef mil = inch * 0.001; // мил
 
-    // Площадь (для явного расчета давления)
+    // Площади (для расчета давления)
     UnitDef mm2 = mm * mm;
     UnitDef cm2 = cm * cm;
     UnitDef inch2 = inch * inch;
 
-    // Время
+    // --- 2. ВРЕМЯ ---
     UnitDef ms = s * 0.001;
     UnitDef us = s * 1.0e-6;
     UnitDef min = s * 60.0;
     UnitDef hr = min * 60.0;
     UnitDef day = hr * 24.0;
 
-    // Масса
+    // --- 3. МАССА ---
     UnitDef g_mass = kg * 0.001;
     UnitDef lb = kg * 0.45359237;
     UnitDef tonne = kg * 1000.0;
 
-    // Температура (Offset logic)
-    UnitDef degC{1.0, 273.15, {0, 0, 0, 1}};
-    UnitDef degF{5.0 / 9.0, 459.67, {0, 0, 0, 1}};
+    // --- 4. ТЕМПЕРАТУРА ---
+    UnitDef degC{1.0, 273.15, {0, 0, 0, 1, 0}};
+    UnitDef degF{5.0 / 9.0, 459.67, {0, 0, 0, 1, 0}};
 
-    // Сила (F = ma)
+    // --- 5. СИЛА ТОКА ---
+    UnitDef mA = A * 0.001;
+    UnitDef uA = A * 1.0e-6;
+    UnitDef kA = A * 1000.0;
+
+    // --- 6. СИЛА (F = ma) ---
     UnitDef N = kg * m / (s * s);
     UnitDef kN = N * 1000.0;
     UnitDef MN = N * 1.0e6;
@@ -117,7 +124,7 @@ static void initRegistry()
     UnitDef lbf = lb * gravity * m / (s * s);
     UnitDef kip = lbf * 1000.0;
 
-    // Давление (P = F / S)
+    // --- 7. ДАВЛЕНИЕ (P = F / S) ---
     UnitDef Pa = N / (m * m);
     UnitDef kPa = Pa * 1000.0;
     UnitDef MPa = Pa * 1.0e6;
@@ -131,40 +138,35 @@ static void initRegistry()
     UnitDef kgf_cm2 = kgf / cm2;
     UnitDef atm = Pa * 101325.0;
 
-    // Скорость (L / T)
-    UnitDef m_sec = m / s;
-    UnitDef mm_min = mm / min;
-    UnitDef km_h = km / hr;
-    UnitDef inch_min = inch / min;
+    // --- 8. НАПРЯЖЕНИЕ ---
+    UnitDef V = (N * m / s) / A;
+    UnitDef mV = V * 0.001;
+    UnitDef uV = V * 1.0e-6;
+    UnitDef kV = V * 1000.0;
 
-    // Скорость нагружения
-    // Используем явный расчет через mm2 для N/mm²/s
-    UnitDef N_per_mm2 = N / mm2; // == MPa
-
-    UnitDef MPa_sec = MPa / s;
-    UnitDef psi_sec = psi / s;
-    UnitDef kN_sec = kN / s;
-    UnitDef N_mm2_sec = N_per_mm2 / s;
-
-    // Лямбда добавления
+    // --- Лямбда для добавления ---
     auto add = [](MeasUnit u, UnitDef d, UnitCategory cat, const char *sym, const char *name) {
         registry.insert(u, {d, cat, name, sym});
     };
 
-    // --- ЗАПОЛНЕНИЕ РЕЕСТРА ---
+    // =========================================================================
+    // ЗАПОЛНЕНИЕ РЕЕСТРА
+    // =========================================================================
 
     // ДЛИНА
     add(MeasUnit::Millimeter, mm, UnitCategory::Length, QT_TR_NOOP("мм"), QT_TR_NOOP("Миллиметр"));
     add(MeasUnit::Centimeter, cm, UnitCategory::Length, QT_TR_NOOP("см"), QT_TR_NOOP("Сантиметр"));
+    add(MeasUnit::Decimeter, dm, UnitCategory::Length, QT_TR_NOOP("дм"), QT_TR_NOOP("Дециметр"));
     add(MeasUnit::Meter, m, UnitCategory::Length, QT_TR_NOOP("м"), QT_TR_NOOP("Метр"));
     add(MeasUnit::Kilometer, km, UnitCategory::Length, QT_TR_NOOP("км"), QT_TR_NOOP("Километр"));
     add(MeasUnit::Micrometer, um, UnitCategory::Length, QT_TR_NOOP("мкм"), QT_TR_NOOP("Микрометр"));
     add(MeasUnit::Inch, inch, UnitCategory::Length, QT_TR_NOOP("дюйм"), QT_TR_NOOP("Дюйм"));
     add(MeasUnit::Foot, ft, UnitCategory::Length, QT_TR_NOOP("фт"), QT_TR_NOOP("Фут"));
     add(MeasUnit::Yard, yd, UnitCategory::Length, QT_TR_NOOP("ярд"), QT_TR_NOOP("Ярд"));
+    add(MeasUnit::Mil, mil, UnitCategory::Length, QT_TR_NOOP("мил"), QT_TR_NOOP("Мил"));
 
     // ВРЕМЯ
-    add(MeasUnit::Second, s, UnitCategory::Time, QT_TR_NOOP("сек"), QT_TR_NOOP("Секунда"));
+    add(MeasUnit::Second, s, UnitCategory::Time, QT_TR_NOOP("с"), QT_TR_NOOP("Секунда"));
     add(MeasUnit::Minute, min, UnitCategory::Time, QT_TR_NOOP("мин"), QT_TR_NOOP("Минута"));
     add(MeasUnit::Hour, hr, UnitCategory::Time, QT_TR_NOOP("ч"), QT_TR_NOOP("Час"));
     add(MeasUnit::Day, day, UnitCategory::Time, QT_TR_NOOP("дн"), QT_TR_NOOP("День"));
@@ -201,7 +203,11 @@ static void initRegistry()
         QT_TR_NOOP("кгс"),
         QT_TR_NOOP("Килограмм-сила"));
     add(MeasUnit::TonForce, tf, UnitCategory::Force, QT_TR_NOOP("тс"), QT_TR_NOOP("Тонна-сила"));
-    add(MeasUnit::PoundForce, lbf, UnitCategory::Force, QT_TR_NOOP("lbf"), QT_TR_NOOP("Фунт-сила"));
+    add(MeasUnit::PoundForce,
+        lbf,
+        UnitCategory::Force,
+        QT_TR_NOOP("фунт-сила"),
+        QT_TR_NOOP("Фунт-сила"));
     add(MeasUnit::Kip, kip, UnitCategory::Force, QT_TR_NOOP("kip"), QT_TR_NOOP("Килофунт-сила"));
 
     // ДАВЛЕНИЕ
@@ -236,49 +242,172 @@ static void initRegistry()
         QT_TR_NOOP("атм"),
         QT_TR_NOOP("Атмосфера"));
 
-    // СКОРОСТЬ
-    add(MeasUnit::MM_per_Min,
-        mm_min,
+    // НАПРЯЖЕНИЕ (VOLTAGE)
+    add(MeasUnit::Microvolt, uV, UnitCategory::Voltage, QT_TR_NOOP("мкВ"), QT_TR_NOOP("Микровольт"));
+    add(MeasUnit::Millivolt, mV, UnitCategory::Voltage, QT_TR_NOOP("мВ"), QT_TR_NOOP("Милливольт"));
+    add(MeasUnit::Volt, V, UnitCategory::Voltage, QT_TR_NOOP("В"), QT_TR_NOOP("Вольт"));
+    add(MeasUnit::Kilovolt, kV, UnitCategory::Voltage, QT_TR_NOOP("кВ"), QT_TR_NOOP("Киловольт"));
+
+    // СИЛА ТОКА (CURRENT)
+    add(MeasUnit::Microampere,
+        uA,
+        UnitCategory::Current,
+        QT_TR_NOOP("мкА"),
+        QT_TR_NOOP("Микроампер"));
+    add(MeasUnit::Milliampere, mA, UnitCategory::Current, QT_TR_NOOP("мА"), QT_TR_NOOP("Миллиампер"));
+    add(MeasUnit::Ampere, A, UnitCategory::Current, QT_TR_NOOP("А"), QT_TR_NOOP("Ампер"));
+    add(MeasUnit::Kiloampere, kA, UnitCategory::Current, QT_TR_NOOP("кА"), QT_TR_NOOP("Килоампер"));
+
+    // --- СКОРОСТЬ (VELOCITY) ---
+    // В Секунду
+    add(MeasUnit::MM_per_Sec,
+        mm / s,
         UnitCategory::Velocity,
-        QT_TR_NOOP("мм/мин"),
-        QT_TR_NOOP("мм в минуту"));
+        QT_TR_NOOP("мм/с"),
+        QT_TR_NOOP("мм в секунду"));
+    add(MeasUnit::CM_per_Sec,
+        cm / s,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("см/с"),
+        QT_TR_NOOP("см в секунду"));
+    add(MeasUnit::DM_per_Sec,
+        dm / s,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("дм/с"),
+        QT_TR_NOOP("дм в секунду"));
     add(MeasUnit::Meter_per_Sec,
-        m_sec,
+        m / s,
         UnitCategory::Velocity,
         QT_TR_NOOP("м/с"),
         QT_TR_NOOP("м в секунду"));
+    add(MeasUnit::Inch_per_Sec,
+        inch / s,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("дюйм/с"),
+        QT_TR_NOOP("дюйм в секунду"));
+    add(MeasUnit::Foot_per_Sec,
+        ft / s,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("фут/с"),
+        QT_TR_NOOP("фут в секунду"));
+    add(MeasUnit::Mil_per_Sec,
+        mil / s,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("мил/с"),
+        QT_TR_NOOP("мил в секунду"));
+
+    // В Минуту
+    add(MeasUnit::MM_per_Min,
+        mm / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("мм/мин"),
+        QT_TR_NOOP("мм в минуту"));
+    add(MeasUnit::CM_per_Min,
+        cm / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("см/мин"),
+        QT_TR_NOOP("см в минуту"));
+    add(MeasUnit::DM_per_Min,
+        dm / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("дм/мин"),
+        QT_TR_NOOP("дм в минуту"));
+    add(MeasUnit::Meter_per_Min,
+        m / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("м/мин"),
+        QT_TR_NOOP("м в минуту"));
+    add(MeasUnit::Inch_per_Min,
+        inch / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("дюйм/мин"),
+        QT_TR_NOOP("дюйм в минуту"));
+    add(MeasUnit::Foot_per_Min,
+        ft / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("фут/мин"),
+        QT_TR_NOOP("фут в минуту"));
+    add(MeasUnit::Mil_per_Min,
+        mil / min,
+        UnitCategory::Velocity,
+        QT_TR_NOOP("мил/мин"),
+        QT_TR_NOOP("мил в минуту"));
+
     add(MeasUnit::KM_per_Hour,
-        km_h,
+        km / hr,
         UnitCategory::Velocity,
         QT_TR_NOOP("км/ч"),
         QT_TR_NOOP("км в час"));
-    add(MeasUnit::Inch_per_Min,
-        inch_min,
-        UnitCategory::Velocity,
-        QT_TR_NOOP("in/min"),
-        QT_TR_NOOP("дюйм в минуту"));
 
-    // СКОРОСТЬ НАГРУЖЕНИЯ
+    // --- СКОРОСТЬ РОСТА ДАВЛЕНИЯ (PRESSURE RATE) ---
+    // Па/с, кПа/с, МПа/с, ГПа/с
+    add(MeasUnit::Pascal_per_Sec,
+        Pa / s,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("Па/с"),
+        QT_TR_NOOP("Паскаль в секунду"));
+    add(MeasUnit::KiloPascal_per_Sec,
+        kPa / s,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("кПа/с"),
+        QT_TR_NOOP("Килопаскаль в секунду"));
     add(MeasUnit::MegaPascal_per_Sec,
-        MPa_sec,
+        MPa / s,
         UnitCategory::PressureRate,
         QT_TR_NOOP("МПа/с"),
-        QT_TR_NOOP("МПа в секунду"));
+        QT_TR_NOOP("Мегапаскаль в секунду"));
+    add(MeasUnit::GigaPascal_per_Sec,
+        GPa / s,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("ГПа/с"),
+        QT_TR_NOOP("Гигапаскаль в секунду"));
+
+    // Н/мм2/с, кгс/см2/с
     add(MeasUnit::Newton_per_MM2_per_Sec,
-        N_mm2_sec,
+        N / mm2 / s,
         UnitCategory::PressureRate,
         QT_TR_NOOP("Н/мм²/с"),
         QT_TR_NOOP("Н/мм² в секунду"));
-    add(MeasUnit::PSI_per_Sec,
-        psi_sec,
+    add(MeasUnit::Kgf_per_CM2_per_Sec,
+        kgf / cm2 / s,
         UnitCategory::PressureRate,
-        QT_TR_NOOP("psi/s"),
+        QT_TR_NOOP("кгс/см²/с"),
+        QT_TR_NOOP("кгс/см² в секунду"));
+
+    // psi/c, ksi/c
+    add(MeasUnit::PSI_per_Sec,
+        psi / s,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("psi/с"),
         QT_TR_NOOP("psi в секунду"));
+    add(MeasUnit::KSI_per_Sec,
+        ksi / s,
+        UnitCategory::PressureRate,
+        QT_TR_NOOP("ksi/с"),
+        QT_TR_NOOP("ksi в секунду"));
+
+    // --- СКОРОСТЬ РОСТА СИЛЫ (FORCE RATE) ---
+    // кН/с, Н/с, кгс/с, фунт-сила/с
+    add(MeasUnit::Newton_per_Sec,
+        N / s,
+        UnitCategory::ForceRate,
+        QT_TR_NOOP("Н/с"),
+        QT_TR_NOOP("Ньютон в секунду"));
     add(MeasUnit::KiloNewton_per_Sec,
-        kN_sec,
+        kN / s,
         UnitCategory::ForceRate,
         QT_TR_NOOP("кН/с"),
-        QT_TR_NOOP("кН в секунду"));
+        QT_TR_NOOP("Килоньютон в секунду"));
+    add(MeasUnit::KilogramForce_per_Sec,
+        kgf / s,
+        UnitCategory::ForceRate,
+        QT_TR_NOOP("кгс/с"),
+        QT_TR_NOOP("кгс в секунду"));
+    add(MeasUnit::PoundForce_per_Sec,
+        lbf / s,
+        UnitCategory::ForceRate,
+        QT_TR_NOOP("фунт-сила/с"),
+        QT_TR_NOOP("Фунт-сила в секунду"));
 }
 
 // Внутренний хелпер доступа к реестру
@@ -314,6 +443,50 @@ double convert(double val, MeasUnit from, MeasUnit to)
 UnitCategory category(MeasUnit u)
 {
     return getEntry(u).category;
+}
+
+QString categoryName(UnitCategory type)
+{
+    const char *key = nullptr;
+    switch (type) {
+    case UnitCategory::Length:
+        key = QT_TR_NOOP("Длина");
+        break;
+    case UnitCategory::Time:
+        key = QT_TR_NOOP("Время");
+        break;
+    case UnitCategory::Temperature:
+        key = QT_TR_NOOP("Температура");
+        break;
+    case UnitCategory::Mass:
+        key = QT_TR_NOOP("Масса");
+        break;
+    case UnitCategory::Force:
+        key = QT_TR_NOOP("Сила");
+        break;
+    case UnitCategory::Pressure:
+        key = QT_TR_NOOP("Давление");
+        break;
+    case UnitCategory::Voltage:
+        key = QT_TR_NOOP("Напряжение");
+        break;
+    case UnitCategory::Current:
+        key = QT_TR_NOOP("Сила тока");
+        break;
+    case UnitCategory::Velocity:
+        key = QT_TR_NOOP("Скорость");
+        break;
+    case UnitCategory::PressureRate:
+        key = QT_TR_NOOP("Скорость нагружения (Давление)");
+        break;
+    case UnitCategory::ForceRate:
+        key = QT_TR_NOOP("Скорость нагружения (Сила)");
+        break;
+    default:
+        key = QT_TR_NOOP("Неизвестно");
+        break;
+    }
+    return QCoreApplication::translate("EvoUnit::TranslationContext", key);
 }
 
 QList<MeasUnit> unitsByType(UnitCategory type)
@@ -410,10 +583,6 @@ Converter::Converter(MeasUnit from, MeasUnit to)
 
     double ratio = dFrom.factor() / dTo.factor();
     m_slope = ratio;
-    // Корректная логика offset:
-    // val_base = (val_src + off_src) * f_src
-    // val_dst = (val_base / f_dst) - off_dst
-    // val_dst = val_src * (f_src/f_dst) + (off_src * f_src / f_dst) - off_dst
     m_offset = (dFrom.offset() * ratio) - dTo.offset();
     m_valid = true;
 }
@@ -455,6 +624,11 @@ QString JsGateway::name(EvoUnit::MeasUnit u)
 EvoUnit::UnitCategory JsGateway::category(EvoUnit::MeasUnit u)
 {
     return EvoUnit::category(u);
+}
+
+QString JsGateway::categoryName(EvoUnit::UnitCategory type)
+{
+    return EvoUnit::categoryName(type);
 }
 
 QVariantList JsGateway::unitsByType(EvoUnit::UnitCategory type)

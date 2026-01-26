@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QList>
@@ -10,21 +11,26 @@
 
 namespace EvoUnit {
 
-// Включаем поддержку мета-системы для namespace (для Enums)
+// Включаем поддержку мета-системы для namespace
 Q_NAMESPACE
 
 // 1. Идентификаторы единиц
 enum class MeasUnit {
     Unknown = 0,
+
     // --- Длина ---
     Millimeter,
     Centimeter,
+    Decimeter, // дм
     Meter,
     Kilometer,
+    Micrometer,
+
     Inch,
     Foot,
     Yard,
-    Micrometer,
+    Mil, // мил (1/1000 дюйма)
+
     // --- Время ---
     Second,
     Minute,
@@ -32,15 +38,18 @@ enum class MeasUnit {
     Day,
     Millisecond,
     Microsecond,
+
     // --- Температура ---
     Kelvin,
     Celsius,
     Fahrenheit,
+
     // --- Масса ---
     Gram,
     Kilogram,
     Pound,
     Tonne,
+
     // --- Сила ---
     Newton,
     KiloNewton,
@@ -50,6 +59,7 @@ enum class MeasUnit {
     TonForce,
     PoundForce,
     Kip,
+
     // --- Давление ---
     Pascal,
     KiloPascal,
@@ -61,16 +71,55 @@ enum class MeasUnit {
     KSI,
     Kgf_per_CM2,
     Atmosphere,
-    // --- Скорость ---
-    MM_per_Min,
+
+    // --- Напряжение (Voltage) ---
+    Microvolt,
+    Millivolt,
+    Volt,
+    Kilovolt,
+
+    // --- Сила тока (Current) ---
+    Microampere,
+    Milliampere,
+    Ampere,
+    Kiloampere,
+
+    // --- Скорость (Velocity) ---
+    // .. в секунду
+    MM_per_Sec,
+    CM_per_Sec,
+    DM_per_Sec,
     Meter_per_Sec,
-    KM_per_Hour,
+    Inch_per_Sec,
+    Foot_per_Sec,
+    Mil_per_Sec,
+
+    // .. в минуту
+    MM_per_Min,
+    CM_per_Min,
+    DM_per_Min,
+    Meter_per_Min,
     Inch_per_Min,
-    // --- Скорость нагружения ---
+    Foot_per_Min,
+    Mil_per_Min,
+
+    KM_per_Hour,
+
+    // --- Скорость роста давления (Pressure Rate) ---
+    Pascal_per_Sec,
+    KiloPascal_per_Sec,
     MegaPascal_per_Sec,
+    GigaPascal_per_Sec,
     Newton_per_MM2_per_Sec,
+    Kgf_per_CM2_per_Sec,
     PSI_per_Sec,
-    KiloNewton_per_Sec
+    KSI_per_Sec,
+
+    // --- Скорость роста силы (Force Rate) ---
+    Newton_per_Sec,
+    KiloNewton_per_Sec,
+    KilogramForce_per_Sec,
+    PoundForce_per_Sec
 };
 Q_ENUM_NS(MeasUnit)
 
@@ -83,30 +132,32 @@ enum class UnitCategory {
     Mass,
     Force,
     Pressure,
+    Voltage,
+    Current,
     Velocity,
     PressureRate,
     ForceRate
 };
 Q_ENUM_NS(UnitCategory)
 
-// 3. Размерности
+// 3. Размерности [L, M, T, Theta, I]
 struct Dimensions
 {
-    int8_t L, M, T, Theta;
+    int8_t L, M, T, Theta, I;
     bool operator==(const Dimensions &o) const
     {
-        return L == o.L && M == o.M && T == o.T && Theta == o.Theta;
+        return L == o.L && M == o.M && T == o.T && Theta == o.Theta && I == o.I;
     }
     bool operator!=(const Dimensions &o) const { return !(*this == o); }
 };
 
 // =========================================================================
-// UnitDef: Описание физической сущности (Value Object)
+// UnitDef: Value Object (Физика)
 // =========================================================================
 class UnitDef
 {
 public:
-    UnitDef(double factor = 1.0, double offset = 0.0, Dimensions dim = {0, 0, 0, 0});
+    UnitDef(double factor = 1.0, double offset = 0.0, Dimensions dim = {0, 0, 0, 0, 0});
 
     UnitDef operator*(const UnitDef &other) const;
     UnitDef operator/(const UnitDef &other) const;
@@ -126,20 +177,16 @@ private:
 // API Пространства имен (C++ Free Functions)
 // =========================================================================
 
-// Конвертация
 double convert(double val, MeasUnit from, MeasUnit to);
-
-// Информация о единице
 UnitCategory category(MeasUnit u);
+QString categoryName(UnitCategory type); // [NEW] Получить имя категории
 QList<MeasUnit> unitsByType(UnitCategory type);
 bool isCompatible(MeasUnit u1, MeasUnit u2);
 
-// Строковые представления (Локализованные, по умолчанию Русский)
 QString symbol(MeasUnit u);
 QString name(MeasUnit u);
 QString format(double value, MeasUnit u, int precision = 2);
 
-// Парсинг и Авто-масштаб
 struct ParsedValue
 {
     double value{0.0};
@@ -151,7 +198,7 @@ ParsedValue parse(const QString &input);
 QPair<double, MeasUnit> autoScale(double value, MeasUnit currentUnit);
 
 // =========================================================================
-// Converter (Helper Class для циклов)
+// Converter (Helper Class)
 // =========================================================================
 class Converter
 {
@@ -175,7 +222,6 @@ QDebug operator<<(QDebug dbg, MeasUnit u);
 class JsGateway : public QObject
 {
     Q_OBJECT
-
 public:
     explicit JsGateway(QObject *parent = nullptr);
 
@@ -183,7 +229,10 @@ public:
     Q_INVOKABLE QString format(double val, EvoUnit::MeasUnit u, int precision = 2);
     Q_INVOKABLE QString symbol(EvoUnit::MeasUnit u);
     Q_INVOKABLE QString name(EvoUnit::MeasUnit u);
+
     Q_INVOKABLE EvoUnit::UnitCategory category(EvoUnit::MeasUnit u);
+    Q_INVOKABLE QString categoryName(EvoUnit::UnitCategory type); // [NEW]
+
     Q_INVOKABLE QVariantList unitsByType(EvoUnit::UnitCategory type);
     Q_INVOKABLE QVariantMap parse(const QString &input);
 };
