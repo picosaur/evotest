@@ -1,24 +1,28 @@
 #pragma once
 
+#include <QFile>
 #include <QJSEngine>
-#include <QLCDNumber>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMap>
 #include <QModbusDataUnit>
 #include <QModbusReply>
 #include <QModbusTcpClient>
 #include <QObject>
 #include <QPointer>
-#include <QProgressBar>
 #include <QString>
 #include <QTimer>
 #include <QVariant>
 #include <QVector>
-#include <QWidget>
-#include <qlabel.h>
 #include <string>
 
 // Подключаем EvoUnit
 #include "EvoUnit.h"
+
+#include <QLCDNumber>
+#include <QLabel>
+#include <QProgressBar>
 
 namespace EvoModbus {
 
@@ -136,51 +140,72 @@ private:
 class Controller : public QObject
 {
     Q_OBJECT
-
 public:
     explicit Controller(QObject *parent = nullptr);
 
-    // Config
+    // --- Configuration ---
+
+    // Hardware Sources
     void addModbusSource(const Source &source);
     Q_INVOKABLE void addSource(const QVariantMap &config);
     void clearSources();
     QVector<Source> getSources() const;
 
+    // Logic Formulas
     void addComputedChannel(const ComputedChannel &ch);
     void clearComputedChannels();
     QVector<ComputedChannel> getComputedChannels() const;
+
+    // Scripting
     void buildAndApplyScript();
     void setScript(const QString &scriptCode);
 
+    // Validation
     bool isIdUnique(const QString &id) const;
 
-    // Control
+    // Persistence (Save/Load)
+    bool saveConfig(const QString &filename);
+    bool loadConfig(const QString &filename);
+
+    // --- Control ---
     Q_INVOKABLE void connectToServer(const QString &ip, int port);
+    Q_INVOKABLE void disconnectFrom();
     Q_INVOKABLE void start(int intervalMs = 1000);
     Q_INVOKABLE void stop();
 
+    // Accessors
     QJSEngine *engine() const { return const_cast<QJSEngine *>(&m_jsEngine); }
     QMap<QString, ChannelData> getChannels() const { return m_channels; }
 
-    // JS API
+    // --- JS API (IO Object) ---
     Q_INVOKABLE QVariant val(const QString &id);
     Q_INVOKABLE void set(const QString &id, const QVariant &value, int unit = 0);
     Q_INVOKABLE void write(const QString &id, const QVariant &value);
 
 signals:
     void channelsUpdated();
+    void connectionStateChanged(bool connected);
     void error(QString msg);
 
 private slots:
     void onRawDataReceived();
+    void onManagerConnectionState(int state);
 
 private:
     Manager *m_manager{nullptr};
     QJSEngine m_jsEngine;
     QJSValue m_jsProcessFunction;
     EvoUnit::JsGateway *m_unitGateway{nullptr};
+
+    // State
     QMap<QString, ChannelData> m_channels{};
     QVector<ComputedChannel> m_computedChannels{};
+
+    // Serialization Helpers
+    QJsonObject sourceToJson(const Source &s) const;
+    Source sourceFromJson(const QJsonObject &obj) const;
+    QJsonObject computedToJson(const ComputedChannel &ch) const;
+    ComputedChannel computedFromJson(const QJsonObject &obj) const;
 };
 
 // =========================================================

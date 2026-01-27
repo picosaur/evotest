@@ -6,8 +6,6 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTabWidget>
-
-// Подключаем ядро и GUI модули
 #include "EvoGui.h"
 #include "EvoModbus.h"
 
@@ -20,27 +18,30 @@ public:
     ~MainWindow();
 
 private slots:
-    void onConnect();
-    void onDisconnect();
+    void onConnectClicked();
+    void onDisconnectClicked();
+
+    // [NEW] Слоты меню
+    void onActionSave();
+    void onActionLoad();
+
+    // [NEW] Слоты состояния
+    void onConnectionState(bool connected);
     void onError(QString msg);
 
 private:
     void setupUi();
+    void updateUiState(bool connected);
 
-    // Modbus Controller
     EvoModbus::Controller *m_controller{nullptr};
 
-    // UI Elements
     QTabWidget *m_tabs{nullptr};
-
-    // Connection Toolbar
     QLineEdit *m_edtIp{nullptr};
     QSpinBox *m_sbPort{nullptr};
     QPushButton *m_btnConnect{nullptr};
     QPushButton *m_btnDisconnect{nullptr};
     QLabel *m_lblStatus{nullptr};
 
-    // Widgets from EvoModbusGui
     EvoGui::SourceConfigWidget *m_sourceWidget{nullptr};
     EvoGui::FormulaConfigWidget *m_formulaWidget{nullptr};
     EvoGui::DashboardWidget *m_dashboardWidget{nullptr};

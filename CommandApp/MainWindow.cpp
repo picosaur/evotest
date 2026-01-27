@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     , modbusDevice(new QModbusTcpClient(this))
 {
     ui->setupUi(this);
+    setWindowTitle("CommandApp");
 
     // ===============================================
     // НАСТРОЙКА ВАЛИДАТОРОВ (ФИЛЬТРЫ ВВОДА)
@@ -273,7 +274,7 @@ void MainWindow::processAutoReadParams()
     // Читаем с адреса 2 по 16 (всего 15 регистров)
     if (modbusDevice->state() == QModbusDevice::ConnectedState) {
         if (auto *reply = modbusDevice->sendReadRequest(
-                QModbusDataUnit(QModbusDataUnit::HoldingRegisters, 2, 15), SERVER_ID)) {
+                QModbusDataUnit(QModbusDataUnit::HoldingRegisters, 2, 15), ui->slaveIdIn->value())) {
             if (!reply->isFinished()) {
                 connect(reply, &QModbusReply::finished, this, &MainWindow::onReadReady);
                 reply->setProperty("ID", "AllParams");
@@ -297,7 +298,7 @@ void MainWindow::processAutoReadIndicators()
     if (modbusDevice->state() == QModbusDevice::ConnectedState) {
         if (auto *reply
             = modbusDevice->sendReadRequest(QModbusDataUnit(QModbusDataUnit::InputRegisters, 0, 10),
-                                            SERVER_ID)) {
+                                            ui->slaveIdIn->value())) {
             if (!reply->isFinished()) {
                 connect(reply, &QModbusReply::finished, this, &MainWindow::onReadReady);
                 reply->setProperty("ID", "AllIndicators");
@@ -380,7 +381,7 @@ void MainWindow::writeSingleRegister(int address, quint16 value)
         return;
     QModbusDataUnit writeUnit(QModbusDataUnit::HoldingRegisters, address, 1);
     writeUnit.setValue(0, value);
-    if (auto *reply = modbusDevice->sendWriteRequest(writeUnit, SERVER_ID)) {
+    if (auto *reply = modbusDevice->sendWriteRequest(writeUnit, ui->slaveIdIn->value())) {
         connect(reply, &QModbusReply::finished, reply, &QModbusReply::deleteLater);
     }
 }
@@ -390,7 +391,7 @@ void MainWindow::writeFloatRegister(int address, float value)
     if (modbusDevice->state() != QModbusDevice::ConnectedState)
         return;
     QModbusDataUnit writeUnit(QModbusDataUnit::HoldingRegisters, address, floatToRegisters(value));
-    if (auto *reply = modbusDevice->sendWriteRequest(writeUnit, SERVER_ID)) {
+    if (auto *reply = modbusDevice->sendWriteRequest(writeUnit, ui->slaveIdIn->value())) {
         connect(reply, &QModbusReply::finished, reply, &QModbusReply::deleteLater);
     }
 }
@@ -399,8 +400,10 @@ void MainWindow::readHoldingRegister(int address, int count, const QString &id)
 {
     if (modbusDevice->state() != QModbusDevice::ConnectedState)
         return;
-    if (auto *reply = modbusDevice->sendReadRequest(
-            QModbusDataUnit(QModbusDataUnit::HoldingRegisters, address, count), SERVER_ID)) {
+    if (auto *reply = modbusDevice->sendReadRequest(QModbusDataUnit(QModbusDataUnit::HoldingRegisters,
+                                                                    address,
+                                                                    count),
+                                                    ui->slaveIdIn->value())) {
         if (!reply->isFinished()) {
             connect(reply, &QModbusReply::finished, this, &MainWindow::onReadReady);
             reply->setProperty("ID", id);
@@ -417,7 +420,7 @@ void MainWindow::readInputRegister(int address, int count, const QString &id)
     if (auto *reply = modbusDevice->sendReadRequest(QModbusDataUnit(QModbusDataUnit::InputRegisters,
                                                                     address,
                                                                     count),
-                                                    SERVER_ID)) {
+                                                    ui->slaveIdIn->value())) {
         if (!reply->isFinished()) {
             connect(reply, &QModbusReply::finished, this, &MainWindow::onReadReady);
             reply->setProperty("ID", id);

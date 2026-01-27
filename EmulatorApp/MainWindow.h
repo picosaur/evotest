@@ -31,7 +31,7 @@ private:
     // GUI элементы
     QLineEdit *leIp;
     QSpinBox *sbPort;
-    QSpinBox *sbSlaveId; // <--- НОВОЕ ПОЛЕ
+    QSpinBox *sbSlaveId;
     QPushButton *btnStart;
     QPushButton *btnStop;
     QTextEdit *txtLog;

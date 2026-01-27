@@ -30,6 +30,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUi()
 {
+    setWindowTitle("EmulatorApp");
+
     QWidget *central = new QWidget(this);
     setCentralWidget(central);
     QVBoxLayout *mainLay = new QVBoxLayout(central);

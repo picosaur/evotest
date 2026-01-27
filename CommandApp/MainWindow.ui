@@ -53,6 +53,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Slave ID:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="slaveIdIn">
+         <property name="value">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="connectBtn">
          <property name="text">
           <string>Подключить</string>

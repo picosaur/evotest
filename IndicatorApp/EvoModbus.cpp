@@ -329,6 +329,7 @@ QVector<quint16> Manager::decomposeFloat(float val, int order)
 // =========================================================
 // CONTROLLER IMPLEMENTATION
 // =========================================================
+// --- CONTROLLER IMPLEMENTATION ---
 
 Controller::Controller(QObject *parent)
     : QObject(parent)
@@ -336,10 +337,11 @@ Controller::Controller(QObject *parent)
     m_manager = new Manager(this);
     m_unitGateway = new EvoUnit::JsGateway(this);
 
-    // JS Setup
+    // JS Setup: пробрасываем объекты для доступа из скрипта
     m_jsEngine.globalObject().setProperty("IO", m_jsEngine.newQObject(this));
     m_jsEngine.globalObject().setProperty("EvoUnit", m_jsEngine.newQObject(m_unitGateway));
 
+    // Регистрируем Enum константы EvoUnit глобально в JS объекте Units
     QJSValue unitsObj = m_jsEngine.newObject();
     const QMetaObject &mo = EvoUnit::staticMetaObject;
     int index = mo.indexOfEnumerator("MeasUnit");
@@ -349,17 +351,29 @@ Controller::Controller(QObject *parent)
     }
     m_jsEngine.globalObject().setProperty("Units", unitsObj);
 
+    // Подключаем сигналы от Менеджера
     connect(m_manager, &Manager::rawDataUpdated, this, &Controller::onRawDataReceived);
+    // Пробрасываем ошибку
+    connect(m_manager, &Manager::errorOccurred, this, [this](QString msg) { emit error(msg); });
+    // Обрабатываем состояние подключения
+    connect(m_manager,
+            &Manager::connectionStateChanged,
+            this,
+            &Controller::onManagerConnectionState);
 }
+
+// --- Config Management ---
 
 void Controller::addModbusSource(const Source &s)
 {
     m_manager->addSource(s);
 }
+
 void Controller::clearSources()
 {
     m_manager->clearSources();
 }
+
 QVector<Source> Controller::getSources() const
 {
     return m_manager->getSources();
@@ -369,70 +383,38 @@ void Controller::addComputedChannel(const ComputedChannel &ch)
 {
     m_computedChannels.append(ch);
 }
+
 void Controller::clearComputedChannels()
 {
     m_computedChannels.clear();
 }
+
 QVector<ComputedChannel> Controller::getComputedChannels() const
 {
     return m_computedChannels;
 }
 
-void Controller::buildAndApplyScript()
-{
-    QString js = "";
-
-    for (const auto &ch : qAsConst(m_computedChannels)) {
-        // Мы ожидаем, что ch.formula - это тело функции, которое возвращает значение.
-        // Оборачиваем в IIFE (Immediately Invoked Function Expression) для изоляции скоупа
-        // и передаем результат в IO.set
-
-        QString funcBody = ch.formula;
-        QString channelId = QString::fromStdString(ch.id);
-        int unitId = (int) ch.unit;
-
-        // Генерация кода:
-        // IO.set('id', (function(){ ... user code ... })(), unit);
-
-        QString line = QString("IO.set('%1', (function(){ %2 })(), %3);")
-                           .arg(channelId)
-                           .arg(funcBody)
-                           .arg(unitId);
-
-        js += line + "\n";
-    }
-
-    // Устанавливаем итоговый скрипт, который будет выполняться каждый цикл
-    setScript(js);
-}
-
-void Controller::setScript(const QString &code)
-{
-    // Оборачиваем весь скрипт в try-catch, чтобы ошибка в одной формуле не валила всё приложение
-    QString full = "(function() { try { " + code + " } catch(e){ print('Script Error: ' + e); } })";
-
-    // Компилируем скрипт в функцию
-    m_jsProcessFunction = m_jsEngine.evaluate(full);
-
-    if (m_jsProcessFunction.isError()) {
-        emit error("JS Compile Error: " + m_jsProcessFunction.toString());
-        qWarning() << "JS Error:" << m_jsProcessFunction.toString();
-    }
-}
-
-// [FIX] Проверка уникальности
+// Проверка уникальности ID во всей системе
 bool Controller::isIdUnique(const QString &id) const
 {
     std::string sId = id.toStdString();
-    for (const auto &s : m_manager->getSources())
+
+    // 1. Проверяем первичные источники
+    for (const auto &s : m_manager->getSources()) {
         if (s.id == sId)
             return false;
-    for (const auto &ch : m_computedChannels)
+    }
+
+    // 2. Проверяем вычисляемые каналы
+    for (const auto &ch : m_computedChannels) {
         if (ch.id == sId)
             return false;
-    // Проверка текущих каналов тоже (опционально, но лучше да)
+    }
+
+    // 3. Проверяем текущие активные каналы (на всякий случай)
     if (m_channels.contains(id))
         return false;
+
     return true;
 }
 
@@ -443,24 +425,73 @@ void Controller::addSource(const QVariantMap &c)
         s.id = c["id"].toString().toStdString();
     else
         return;
+
     s.serverAddress = c.value("server", 1).toInt();
     s.valueAddress = c.value("address", 0).toInt();
-    s.valueType = c.value("type", 1).toInt();
-    s.regType = (QModbusDataUnit::RegisterType) c.value("reg", 4).toInt();
-    s.byteOrder = c.value("byteOrder", 0).toInt();
-    if (c.contains("unit"))
+    s.valueType = c.value("type", (int) ValueType::UInt16).toInt();
+    s.regType = (QModbusDataUnit::RegisterType) c
+                    .value("reg", (int) QModbusDataUnit::HoldingRegisters)
+                    .toInt();
+    s.byteOrder = c.value("byteOrder", (int) ByteOrder::ABCD).toInt();
+
+    if (c.contains("unit")) {
         s.defaultUnit = static_cast<EvoUnit::MeasUnit>(c["unit"].toInt());
+    }
     m_manager->addSource(s);
 }
+
+// --- Scripting ---
+
+void Controller::buildAndApplyScript()
+{
+    QString js = "";
+    for (const auto &ch : qAsConst(m_computedChannels)) {
+        // Оборачиваем пользовательский код в IIFE и передаем результат в IO.set
+        QString funcBody = ch.formula;
+        QString channelId = QString::fromStdString(ch.id);
+        int unitId = (int) ch.unit;
+
+        // Генерация: IO.set('id', (function(){ ... code ... })(), unit);
+        QString line = QString("IO.set('%1', (function(){ %2 })(), %3);")
+                           .arg(channelId)
+                           .arg(funcBody)
+                           .arg(unitId);
+
+        js += line + "\n";
+    }
+    setScript(js);
+}
+
+void Controller::setScript(const QString &code)
+{
+    // Оборачиваем весь блок скриптов в try-catch для безопасности
+    QString full = "(function() { try { " + code + " } catch(e){ print('JS Error: ' + e); } })";
+
+    m_jsProcessFunction = m_jsEngine.evaluate(full);
+
+    if (m_jsProcessFunction.isError()) {
+        emit error("JS Compile Error: " + m_jsProcessFunction.toString());
+        qWarning() << "JS Error:" << m_jsProcessFunction.toString();
+    }
+}
+
+// --- Control & JS API ---
 
 void Controller::connectToServer(const QString &ip, int port)
 {
     m_manager->connectTo(ip, port);
 }
+
+void Controller::disconnectFrom()
+{
+    m_manager->disconnectFrom();
+}
+
 void Controller::start(int ms)
 {
     m_manager->startPolling(ms);
 }
+
 void Controller::stop()
 {
     m_manager->stopPolling();
@@ -468,39 +499,166 @@ void Controller::stop()
 
 QVariant Controller::val(const QString &id)
 {
+    // Используется внутри JS для получения значения другого канала
     if (m_channels.contains(id))
         return m_channels[id].value;
     return 0.0;
 }
+
 void Controller::set(const QString &id, const QVariant &val, int unit)
 {
+    // Используется внутри JS для записи результата вычисления
     EvoUnit::MeasUnit u = (EvoUnit::MeasUnit) unit;
-    if (u == EvoUnit::MeasUnit::Unknown && m_channels.contains(id))
+    // Если юнит не задан, пытаемся сохранить старый
+    if (u == EvoUnit::MeasUnit::Unknown && m_channels.contains(id)) {
         u = m_channels[id].unit;
+    }
     m_channels[id] = {val, u};
 }
+
 void Controller::write(const QString &id, const QVariant &val)
 {
+    // Прямая запись в Modbus из JS (например по кнопке)
     auto cfg = m_manager->getSourceConfig(id);
-    if (!cfg.id.empty())
+    if (!cfg.id.empty()) {
         m_manager->writeValue(cfg.serverAddress,
                               cfg.valueAddress,
                               val,
                               (ValueType) cfg.valueType,
                               (ByteOrder) cfg.byteOrder);
+    } else {
+        qWarning() << "Write failed: ID not found" << id;
+    }
+}
+
+// --- Internal Slots ---
+
+void Controller::onManagerConnectionState(int state)
+{
+    // QModbusDevice::ConnectedState == 2
+    bool isConnected = (state == 2);
+    emit connectionStateChanged(isConnected);
 }
 
 void Controller::onRawDataReceived()
 {
     QVariantMap raw = m_manager->getRawData();
-    for (auto i = raw.begin(); i != raw.end(); ++i)
-        m_channels[i.key()] = {i.value(), m_manager->getSourceConfig(i.key()).defaultUnit};
 
-    if (m_jsProcessFunction.isCallable())
-        m_jsProcessFunction.call();
+    // 1. Обновляем первичные каналы из rawData
+    for (auto i = raw.begin(); i != raw.end(); ++i) {
+        QString id = i.key();
+        // Берем дефолтный юнит из конфига источника
+        m_channels[id] = {i.value(), m_manager->getSourceConfig(id).defaultUnit};
+    }
+
+    // 2. Выполняем скрипт (расчет вторичных каналов)
+    if (m_jsProcessFunction.isCallable()) {
+        QJSValue res = m_jsProcessFunction.call();
+        if (res.isError()) {
+            // Ошибки рантайма JS (не компиляции)
+            qWarning() << "JS Runtime Error:" << res.toString();
+        }
+    }
+
+    // 3. Уведомляем UI
     emit channelsUpdated();
 }
 
+// --- Save / Load Helpers ---
+
+QJsonObject Controller::sourceToJson(const Source &s) const
+{
+    QJsonObject obj;
+    obj["id"] = QString::fromStdString(s.id);
+    obj["srv"] = s.serverAddress;
+    obj["addr"] = s.valueAddress;
+    obj["reg"] = (int) s.regType;
+    obj["type"] = s.valueType;
+    obj["order"] = s.byteOrder;
+    obj["unit"] = (int) s.defaultUnit;
+    return obj;
+}
+
+Source Controller::sourceFromJson(const QJsonObject &obj) const
+{
+    Source s;
+    s.id = obj["id"].toString().toStdString();
+    s.serverAddress = obj["srv"].toInt(1);
+    s.valueAddress = obj["addr"].toInt(0);
+    s.regType = (QModbusDataUnit::RegisterType) obj["reg"].toInt(4);
+    s.valueType = obj["type"].toInt(1);
+    s.byteOrder = obj["order"].toInt(0);
+    s.defaultUnit = (EvoUnit::MeasUnit) obj["unit"].toInt(0);
+    return s;
+}
+
+QJsonObject Controller::computedToJson(const ComputedChannel &ch) const
+{
+    QJsonObject obj;
+    obj["id"] = QString::fromStdString(ch.id);
+    obj["formula"] = ch.formula;
+    obj["unit"] = (int) ch.unit;
+    return obj;
+}
+
+ComputedChannel Controller::computedFromJson(const QJsonObject &obj) const
+{
+    ComputedChannel ch;
+    ch.id = obj["id"].toString().toStdString();
+    ch.formula = obj["formula"].toString();
+    ch.unit = (EvoUnit::MeasUnit) obj["unit"].toInt(0);
+    return ch;
+}
+
+bool Controller::saveConfig(const QString &filename)
+{
+    QJsonObject root;
+    QJsonArray srcArr;
+    for (const auto &s : m_manager->getSources())
+        srcArr.append(sourceToJson(s));
+    root["sources"] = srcArr;
+
+    QJsonArray calcArr;
+    for (const auto &ch : m_computedChannels)
+        calcArr.append(computedToJson(ch));
+    root["computed"] = calcArr;
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        emit error("Save failed: " + filename);
+        return false;
+    }
+    file.write(QJsonDocument(root).toJson());
+    return true;
+}
+
+bool Controller::loadConfig(const QString &filename)
+{
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly)) {
+        emit error("Load failed: " + filename);
+        return false;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (doc.isNull())
+        return false;
+
+    QJsonObject root = doc.object();
+    stop();
+    clearSources();
+    clearComputedChannels();
+
+    QJsonArray srcArr = root["sources"].toArray();
+    for (const auto &val : srcArr)
+        addModbusSource(sourceFromJson(val.toObject()));
+
+    QJsonArray calcArr = root["computed"].toArray();
+    for (const auto &val : calcArr)
+        addComputedChannel(computedFromJson(val.toObject()));
+
+    buildAndApplyScript();
+    return true;
+}
 // =========================================================
 // BINDER IMPLEMENTATION
 // =========================================================
