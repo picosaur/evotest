@@ -17,7 +17,12 @@ set(PROJECT_SOURCES
         MainWindow.cpp
         MainWindow.h
         MainWindow.ui
+        Iso6892Form.h
+        Iso6892Form.cpp
+        Iso6892Form.ui
 )
+
+include(QCustomPlot.cmake)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(EvoLiteApp
@@ -38,12 +43,11 @@ else()
     else()
         add_executable(EvoLiteApp
             ${PROJECT_SOURCES}
-            Iso6892Form.h Iso6892Form.cpp Iso6892Form.ui
         )
     endif()
 endif()
 
-target_link_libraries(EvoLiteApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(EvoLiteApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets QCustomPlot)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
