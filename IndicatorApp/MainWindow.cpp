@@ -59,7 +59,9 @@ void MainWindow::setupUi()
     mainLayout->addWidget(m_tabs);
 
     // 1. Hardware Config
-    m_sourceWidget = new EvoGui::SourceConfigWidget(m_controller, this);
+    m_sourceWidget = new EvoGui::SourceConfigWidget(m_controller,
+                                                    EvoGui::SourceEditMode::Inline,
+                                                    this);
     m_tabs->addTab(m_sourceWidget, "1. Channels (Hardware)");
 
     // 2. Logic Config

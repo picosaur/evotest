@@ -1,4 +1,5 @@
 #include "GuiSourceConfig.h"
+#include <QApplication>
 #include <QCheckBox>
 #include <QDebug>
 #include <QFormLayout>
@@ -7,10 +8,15 @@
 #include <QMessageBox>
 #include <QMetaEnum>
 #include <QPushButton>
+#include <QRegExpValidator>
+#include <QStyle>
 #include <QVBoxLayout>
 
 namespace EvoGui {
 using namespace EvoModbus;
+
+// Валидатор ID: начинается с буквы/_, дальше буквы/цифры/_
+static const QRegExp ID_REGEX("[a-zA-Z_][a-zA-Z0-9_]*");
 
 static void fillCategoryCombo(QComboBox *cb)
 {
@@ -33,6 +39,55 @@ static void fillUnitsByCategory(QComboBox *cb, EvoUnit::UnitCategory cat)
         cb->addItem(EvoUnit::name(u), (int) u);
 }
 
+// Хелперы отображения
+static QString getRegTypeName(int type)
+{
+    auto t = (QModbusDataUnit::RegisterType) type;
+    if (t == QModbusDataUnit::HoldingRegisters)
+        return "Holding";
+    if (t == QModbusDataUnit::InputRegisters)
+        return "Input";
+    if (t == QModbusDataUnit::Coils)
+        return "Coil";
+    if (t == QModbusDataUnit::DiscreteInputs)
+        return "Discrete";
+    return "?";
+}
+static QString getValTypeName(int type)
+{
+    auto t = (ValueType) type;
+    switch (t) {
+    case ValueType::Bool:
+        return "Bool";
+    case ValueType::UInt16:
+        return "UInt16";
+    case ValueType::Int16:
+        return "Int16";
+    case ValueType::UInt32:
+        return "UInt32";
+    case ValueType::Int32:
+        return "Int32";
+    case ValueType::Float:
+        return "Float";
+    }
+    return QString::number(type);
+}
+static QString getByteOrderName(int order)
+{
+    auto o = (ByteOrder) order;
+    switch (o) {
+    case ByteOrder::ABCD:
+        return "ABCD";
+    case ByteOrder::CDAB:
+        return "CDAB";
+    case ByteOrder::DCBA:
+        return "DCBA";
+    case ByteOrder::BADC:
+        return "BADC";
+    }
+    return QString::number(order);
+}
+
 // =========================================================
 // DIALOG
 // =========================================================
@@ -40,11 +95,13 @@ static void fillUnitsByCategory(QComboBox *cb, EvoUnit::UnitCategory cat)
 SourceAddDialog::SourceAddDialog(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle("Add Channel");
-    resize(400, 300);
+    setWindowTitle("Channel Settings");
+    resize(400, 350);
     auto *l = new QFormLayout(this);
 
     edtId = new QLineEdit;
+    edtId->setValidator(new QRegExpValidator(ID_REGEX, this));
+
     sbServer = new QSpinBox;
     sbServer->setRange(1, 255);
     sbAddr = new QSpinBox;
@@ -72,37 +129,72 @@ SourceAddDialog::SourceAddDialog(QWidget *parent)
 
     cbCategory = new QComboBox;
     fillCategoryCombo(cbCategory);
+
     cbUnit = new QComboBox;
 
     connect(cbCategory,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
             &SourceAddDialog::onCategoryChanged);
-    onCategoryChanged(0);
 
-    l->addRow("ID:", edtId);
-    l->addRow("Server:", sbServer);
+    // Установка дефолтной категории и обновление списка юнитов
+    int defIdx = cbCategory->findData((int) EvoUnit::UnitCategory::Dimensionless);
+    if (defIdx < 0)
+        defIdx = cbCategory->findData((int) EvoUnit::UnitCategory::Length);
+
+    if (defIdx >= 0) {
+        cbCategory->setCurrentIndex(defIdx);
+        onCategoryChanged(defIdx);
+    } else {
+        onCategoryChanged(0);
+    }
+
+    l->addRow("ID (Unique):", edtId);
+    l->addRow("Server ID:", sbServer);
     l->addRow("Address:", sbAddr);
-    l->addRow("Register:", cbRegType);
-    l->addRow("Type:", cbValType);
-    l->addRow("Order:", cbByteOrder);
+    l->addRow("Register Type:", cbRegType);
+    l->addRow("Data Type:", cbValType);
+    l->addRow("Byte Order:", cbByteOrder);
     l->addRow("Category:", cbCategory);
     l->addRow("Unit:", cbUnit);
 
     auto *box = new QHBoxLayout;
     auto *ok = new QPushButton("OK");
+    connect(ok, &QPushButton::clicked, this, &SourceAddDialog::validateAndAccept);
+
     auto *cancel = new QPushButton("Cancel");
-    connect(ok, &QPushButton::clicked, this, &QDialog::accept);
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+
     box->addWidget(ok);
     box->addWidget(cancel);
     l->addRow(box);
+}
+
+void SourceAddDialog::validateAndAccept()
+{
+    if (edtId->text().isEmpty()) {
+        QMessageBox::warning(this, "Error", "ID cannot be empty.");
+        edtId->setFocus();
+        return;
+    }
+    accept();
 }
 
 void SourceAddDialog::onCategoryChanged(int)
 {
     auto cat = (EvoUnit::UnitCategory) cbCategory->currentData().toInt();
     fillUnitsByCategory(cbUnit, cat);
+
+    // Ставим дефолтный юнит для категории
+    if (cat == EvoUnit::UnitCategory::Dimensionless) {
+        int idx = cbUnit->findData((int) EvoUnit::MeasUnit::Dimensionless);
+        if (idx >= 0)
+            cbUnit->setCurrentIndex(idx);
+    } else if (cat == EvoUnit::UnitCategory::Length) {
+        int idx = cbUnit->findData((int) EvoUnit::MeasUnit::Millimeter);
+        if (idx >= 0)
+            cbUnit->setCurrentIndex(idx);
+    }
 }
 
 Source SourceAddDialog::getSource() const
@@ -118,12 +210,47 @@ Source SourceAddDialog::getSource() const
     return s;
 }
 
+void SourceAddDialog::setSource(const Source &s)
+{
+    edtId->setText(QString::fromStdString(s.id));
+    sbServer->setValue(s.serverAddress);
+    sbAddr->setValue(s.valueAddress);
+
+    int idx = cbRegType->findData((int) s.regType);
+    if (idx >= 0)
+        cbRegType->setCurrentIndex(idx);
+
+    idx = cbValType->findData(s.valueType);
+    if (idx >= 0)
+        cbValType->setCurrentIndex(idx);
+
+    idx = cbByteOrder->findData(s.byteOrder);
+    if (idx >= 0)
+        cbByteOrder->setCurrentIndex(idx);
+
+    EvoUnit::UnitCategory cat = EvoUnit::category(s.defaultUnit);
+    idx = cbCategory->findData((int) cat);
+    if (idx >= 0) {
+        cbCategory->setCurrentIndex(idx);
+        onCategoryChanged(idx);
+        idx = cbUnit->findData((int) s.defaultUnit);
+        if (idx >= 0)
+            cbUnit->setCurrentIndex(idx);
+    }
+}
+
+void SourceAddDialog::setIdEditable(bool editable)
+{
+    edtId->setReadOnly(!editable);
+}
+
 // =========================================================
 // TABLE MODEL
 // =========================================================
 
-SourceTableModel::SourceTableModel(QObject *p)
+SourceTableModel::SourceTableModel(SourceEditMode mode, QObject *p)
     : QAbstractTableModel(p)
+    , m_mode(mode)
 {}
 
 bool SourceTableModel::isIdUnique(const QString &id, int ignoreRow) const
@@ -138,6 +265,23 @@ bool SourceTableModel::isIdUnique(const QString &id, int ignoreRow) const
     return true;
 }
 
+bool SourceTableModel::isRowEnabled(int row) const
+{
+    if (row >= 0 && row < m_data.size()) {
+        if (m_mode == SourceEditMode::Dialog)
+            return true;
+        return m_data[row].enabled;
+    }
+    return false;
+}
+
+EvoModbus::Source SourceTableModel::getSourceAt(int row) const
+{
+    if (row >= 0 && row < m_data.size())
+        return m_data[row].source;
+    return {};
+}
+
 int SourceTableModel::rowCount(const QModelIndex &) const
 {
     return m_data.size();
@@ -147,13 +291,6 @@ int SourceTableModel::columnCount(const QModelIndex &) const
     return Col_Count;
 }
 
-bool SourceTableModel::isRowEnabled(int row) const
-{
-    if (row >= 0 && row < m_data.size())
-        return m_data[row].enabled;
-    return false;
-}
-
 QVariant SourceTableModel::data(const QModelIndex &idx, int role) const
 {
     if (!idx.isValid() || idx.row() >= m_data.size())
@@ -161,15 +298,17 @@ QVariant SourceTableModel::data(const QModelIndex &idx, int role) const
     const auto &row = m_data[idx.row()];
     const auto &s = row.source;
 
-    // Чекбокс рисуем через CheckStateRole
-    if (idx.column() == Col_Enabled && role == Qt::CheckStateRole) {
-        return row.enabled ? Qt::Checked : Qt::Unchecked;
+    if (idx.column() == Col_Action) {
+        if (m_mode == SourceEditMode::Inline) {
+            if (role == Qt::CheckStateRole)
+                return row.enabled ? Qt::Checked : Qt::Unchecked;
+        } else {
+            return QVariant();
+        }
     }
 
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+    if (role == Qt::DisplayRole) {
         switch (idx.column()) {
-        case Col_Enabled:
-            return QVariant(); // Пустой текст, только чекбокс
         case Col_ID:
             return QString::fromStdString(s.id);
         case Col_Server:
@@ -177,27 +316,38 @@ QVariant SourceTableModel::data(const QModelIndex &idx, int role) const
         case Col_Address:
             return s.valueAddress;
         case Col_RegType:
-            if (role == Qt::EditRole)
-                return (int) s.regType;
-            return (s.regType == QModbusDataUnit::Coils) ? "Coil" : "Holding";
+            return getRegTypeName((int) s.regType);
         case Col_ValType:
-            if (role == Qt::EditRole)
-                return s.valueType;
-            return QString::number(s.valueType);
+            return getValTypeName(s.valueType);
         case Col_ByteOrder:
-            if (role == Qt::EditRole)
-                return s.byteOrder;
-            return QString::number(s.byteOrder);
-        case Col_Category: {
-            auto cat = EvoUnit::category(s.defaultUnit);
-            if (role == Qt::EditRole)
-                return (int) cat;
-            return EvoUnit::categoryName(cat);
-        }
+            return getByteOrderName(s.byteOrder);
+        case Col_Category:
+            return EvoUnit::categoryName(EvoUnit::category(s.defaultUnit));
         case Col_Unit:
-            if (role == Qt::EditRole)
-                return (int) s.defaultUnit;
             return EvoUnit::name(s.defaultUnit);
+        case Col_Remove:
+            return "";
+        }
+    }
+
+    if (role == Qt::EditRole) {
+        switch (idx.column()) {
+        case Col_ID:
+            return QString::fromStdString(s.id);
+        case Col_Server:
+            return s.serverAddress;
+        case Col_Address:
+            return s.valueAddress;
+        case Col_RegType:
+            return (int) s.regType;
+        case Col_ValType:
+            return s.valueType;
+        case Col_ByteOrder:
+            return s.byteOrder;
+        case Col_Category:
+            return (int) EvoUnit::category(s.defaultUnit);
+        case Col_Unit:
+            return (int) s.defaultUnit;
         }
     }
     return {};
@@ -210,17 +360,19 @@ bool SourceTableModel::setData(const QModelIndex &idx, const QVariant &val, int 
     RowData &row = m_data[idx.row()];
     Source &s = row.source;
 
-    // Обработка клика по чекбоксу
-    if (idx.column() == Col_Enabled && role == Qt::CheckStateRole) {
+    // Inline Checkbox
+    if (m_mode == SourceEditMode::Inline && idx.column() == Col_Action
+        && role == Qt::CheckStateRole) {
         row.enabled = (val.toInt() == Qt::Checked);
         emit dataChanged(idx, idx);
-        // Нужно обновить всю строку, чтобы перерисовались редакторы (включились/выключились)
         emit dataChanged(index(idx.row(), 0), index(idx.row(), Col_Count - 1));
         return true;
     }
 
-    // Редактирование данных только если строка включена
-    if (!row.enabled && idx.column() != Col_Enabled)
+    if (m_mode == SourceEditMode::Dialog && idx.column() != Col_Action && idx.column() != Col_Remove)
+        return false;
+    if (m_mode == SourceEditMode::Inline && !row.enabled && idx.column() != Col_Action
+        && idx.column() != Col_Remove)
         return false;
 
     if (role == Qt::EditRole) {
@@ -228,7 +380,9 @@ bool SourceTableModel::setData(const QModelIndex &idx, const QVariant &val, int 
         switch (idx.column()) {
         case Col_ID: {
             QString newId = val.toString();
-            if (newId.isEmpty() || !isIdUnique(newId, idx.row()))
+            if (newId.isEmpty())
+                return false;
+            if (!isIdUnique(newId, idx.row()))
                 return false;
             s.id = newId.toStdString();
             changed = true;
@@ -254,7 +408,6 @@ bool SourceTableModel::setData(const QModelIndex &idx, const QVariant &val, int 
             s.byteOrder = val.toInt();
             changed = true;
             break;
-
         case Col_Category: {
             auto cat = (EvoUnit::UnitCategory) val.toInt();
             auto units = EvoUnit::unitsByType(cat);
@@ -278,9 +431,11 @@ bool SourceTableModel::setData(const QModelIndex &idx, const QVariant &val, int 
 QVariant SourceTableModel::headerData(int sec, Qt::Orientation o, int r) const
 {
     if (r == Qt::DisplayRole && o == Qt::Horizontal) {
-        const char *n[] = {"", "ID", "Srv", "Addr", "Reg", "Type", "Ord", "Cat", "Unit"};
-        if (sec < 9)
-            return n[sec];
+        QString firstCol = (m_mode == SourceEditMode::Inline) ? "En" : "";
+        const QString names[]
+            = {firstCol, "ID", "Srv", "Addr", "Reg", "Type", "Ord", "Cat", "Unit", ""};
+        if (sec < 10)
+            return names[sec];
     }
     return {};
 }
@@ -290,25 +445,31 @@ Qt::ItemFlags SourceTableModel::flags(const QModelIndex &idx) const
     if (!idx.isValid())
         return Qt::NoItemFlags;
 
-    Qt::ItemFlags f = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+    Qt::ItemFlags f = Qt::ItemIsEnabled;
 
-    // Колонка чекбокса всегда активна и чекабельна
-    if (idx.column() == Col_Enabled) {
-        return f | Qt::ItemIsUserCheckable; // Убрали Editable, добавили UserCheckable
+    if (idx.column() == Col_Remove)
+        return f;
+
+    if (m_mode == SourceEditMode::Dialog) {
+        if (idx.column() == Col_Action)
+            return f;
+        return f;
     }
 
-    // Остальные колонки редактируемы только если строка enabled
+    if (idx.column() == Col_Action)
+        return f | Qt::ItemIsUserCheckable;
     if (m_data[idx.row()].enabled) {
         f |= Qt::ItemIsEditable;
-    } else {
-        // Можно убрать ItemIsEnabled чтобы визуально задизейблить, но тогда выделение пропадет
-        // Лучше оставить, но не давать Editable
     }
     return f;
 }
 
 bool SourceTableModel::addSource(const Source &s, QString &err)
 {
+    if (s.id.empty()) {
+        err = "Empty ID";
+        return false;
+    }
     if (!isIdUnique(QString::fromStdString(s.id))) {
         err = "ID exists";
         return false;
@@ -316,10 +477,18 @@ bool SourceTableModel::addSource(const Source &s, QString &err)
     beginInsertRows({}, m_data.size(), m_data.size());
     RowData rd;
     rd.source = s;
-    rd.enabled = true; // Новые всегда активны
+    rd.enabled = true;
     m_data.append(rd);
     endInsertRows();
     return true;
+}
+
+void SourceTableModel::updateSource(int row, const Source &s)
+{
+    if (row >= 0 && row < m_data.size()) {
+        m_data[row].source = s;
+        emit dataChanged(index(row, 0), index(row, Col_Count - 1));
+    }
 }
 
 void SourceTableModel::removeSource(int r)
@@ -338,7 +507,7 @@ void SourceTableModel::setSources(const QVector<Source> &s)
     for (const auto &src : s) {
         RowData rd;
         rd.source = src;
-        rd.enabled = true; // При загрузке включаем
+        rd.enabled = true;
         m_data.append(rd);
     }
     endResetModel();
@@ -347,13 +516,9 @@ void SourceTableModel::setSources(const QVector<Source> &s)
 QVector<Source> SourceTableModel::getSources() const
 {
     QVector<Source> res;
-    for (const auto &rd : m_data) {
-        // Возвращаем все (включая выключенные), или только включенные?
-        // Логичнее отправлять в контроллер только включенные, чтобы драйвер их читал.
-        if (rd.enabled) {
+    for (const auto &rd : m_data)
+        if (rd.enabled)
             res.append(rd.source);
-        }
-    }
     return res;
 }
 
@@ -361,26 +526,85 @@ QVector<Source> SourceTableModel::getSources() const
 // DELEGATE
 // =========================================================
 
-SourceDelegate::SourceDelegate(QObject *p)
+SourceDelegate::SourceDelegate(SourceEditMode mode, QObject *p)
     : QStyledItemDelegate(p)
+    , m_mode(mode)
 {}
 
 QWidget *SourceDelegate::createEditor(QWidget *p,
                                       const QStyleOptionViewItem &,
                                       const QModelIndex &idx) const
 {
-    // 1. Проверяем, включена ли строка. Если нет, редактор не создаем.
-    // Мы можем получить доступ к модели через индекс
-    const SourceTableModel *model = qobject_cast<const SourceTableModel *>(idx.model());
-    if (model && !model->isRowEnabled(idx.row())) {
+    auto self = const_cast<SourceDelegate *>(this);
+
+    // Колонка удаления (всегда)
+    if (idx.column() == SourceTableModel::Col_Remove) {
+        auto *btn = new QPushButton(p);
+        btn->setIcon(QApplication::style()->standardIcon(QStyle::SP_TitleBarCloseButton));
+        btn->setStyleSheet("border: none; background: transparent;");
+        auto m = const_cast<SourceTableModel *>(qobject_cast<const SourceTableModel *>(idx.model()));
+        connect(btn, &QPushButton::clicked, self, [m, idx]() { m->removeSource(idx.row()); });
+        return btn;
+    }
+
+    // Режим Dialog: Иконка Edit
+    if (m_mode == SourceEditMode::Dialog) {
+        if (idx.column() == SourceTableModel::Col_Action) {
+            auto *btn = new QPushButton(p);
+            btn->setIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+            btn->setStyleSheet("border: none; background: transparent;");
+            connect(btn, &QPushButton::clicked, self, [self, idx]() {
+                emit self->editRequested(idx.row());
+            });
+            return btn;
+        }
         return nullptr;
     }
 
-    auto self = const_cast<SourceDelegate *>(this);
+    // Режим Inline
+    const SourceTableModel *model = qobject_cast<const SourceTableModel *>(idx.model());
+    if (model && !model->isRowEnabled(idx.row()))
+        return nullptr;
 
     if (idx.column() == SourceTableModel::Col_ID) {
         auto *le = new QLineEdit(p);
-        connect(le, &QLineEdit::editingFinished, self, [self, le]() { emit self->commitData(le); });
+        le->setValidator(new QRegExpValidator(ID_REGEX, le));
+
+        connect(le, &QLineEdit::editingFinished, self, [self, le, idx, model]() {
+            // Проверяем, не удаляется ли виджет (иногда бывает при закрытии редактора)
+            if (!le->isVisible())
+                return;
+
+            QString txt = le->text();
+
+            // Если текст не изменился (например, просто кликнули и ушли), ничего не делаем
+            // Но в данном контексте мы не знаем старое значение в модели без запроса
+            QString oldTxt = model->data(idx, Qt::DisplayRole).toString();
+            if (txt == oldTxt)
+                return;
+
+            bool error = false;
+            QString errorMsg;
+
+            if (txt.isEmpty()) {
+                error = true;
+                errorMsg = "ID cannot be empty";
+            } else if (!model->isIdUnique(txt, idx.row())) {
+                error = true;
+                errorMsg = "ID must be unique";
+            }
+
+            if (error) {
+                // Блокируем сигналы, чтобы messagebox не вызвал рекурсию фокуса
+                le->blockSignals(true);
+                QMessageBox::warning(le, "Error", errorMsg);
+                le->setText(oldTxt);
+                le->setFocus();
+                le->blockSignals(false);
+            } else {
+                emit self->commitData(le);
+            }
+        });
         return le;
     }
 
@@ -444,7 +668,7 @@ QWidget *SourceDelegate::createEditor(QWidget *p,
     if (idx.column() == SourceTableModel::Col_Unit) {
         auto *cb = new QComboBox(p);
         QModelIndex catIdx = idx.sibling(idx.row(), SourceTableModel::Col_Category);
-        auto cat = (EvoUnit::UnitCategory) idx.model()->data(catIdx, Qt::EditRole).toInt();
+        auto cat = (EvoUnit::UnitCategory) model->data(catIdx, Qt::EditRole).toInt();
         fillUnitsByCategory(cb, cat);
         connect(cb, QOverload<int>::of(&QComboBox::currentIndexChanged), self, [self, cb]() {
             emit self->commitData(cb);
@@ -472,9 +696,10 @@ void SourceDelegate::setEditorData(QWidget *e, const QModelIndex &idx) const
 
 void SourceDelegate::setModelData(QWidget *e, QAbstractItemModel *m, const QModelIndex &idx) const
 {
-    if (auto *le = qobject_cast<QLineEdit *>(e))
-        m->setData(idx, le->text(), Qt::EditRole);
-    else if (auto *sb = qobject_cast<QSpinBox *>(e))
+    if (auto *le = qobject_cast<QLineEdit *>(e)) {
+        if (!le->text().isEmpty())
+            m->setData(idx, le->text(), Qt::EditRole);
+    } else if (auto *sb = qobject_cast<QSpinBox *>(e))
         m->setData(idx, sb->value(), Qt::EditRole);
     else if (auto *cb = qobject_cast<QComboBox *>(e))
         m->setData(idx, cb->currentData(), Qt::EditRole);
@@ -491,44 +716,46 @@ void SourceDelegate::updateEditorGeometry(QWidget *e,
 // WIDGET
 // =========================================================
 
-SourceConfigWidget::SourceConfigWidget(Controller *c, QWidget *p)
+SourceConfigWidget::SourceConfigWidget(Controller *c, SourceEditMode mode, QWidget *p)
     : QWidget(p)
     , m_controller(c)
+    , m_mode(mode)
 {
     auto *l = new QVBoxLayout(this);
     auto *tb = new QHBoxLayout();
     auto *btnAdd = new QPushButton("Add...");
-    auto *btnDel = new QPushButton("Remove");
     auto *btnApply = new QPushButton("Apply");
     btnApply->setStyleSheet("color: green; font-weight: bold;");
 
     tb->addWidget(btnAdd);
-    tb->addWidget(btnDel);
     tb->addStretch();
     tb->addWidget(btnApply);
     l->addLayout(tb);
 
-    m_model = new SourceTableModel(this);
+    m_model = new SourceTableModel(m_mode, this);
     m_view = new QTableView(this);
     m_view->setModel(m_model);
-    m_view->setItemDelegate(new SourceDelegate(this));
 
-    // Сетка и Ресайз
+    auto *delegate = new SourceDelegate(m_mode, this);
+    m_view->setItemDelegate(delegate);
+    connect(delegate, &SourceDelegate::editRequested, this, &SourceConfigWidget::onEditRequested);
+
+    m_view->setSelectionMode(QAbstractItemView::NoSelection);
+    m_view->setFocusPolicy(Qt::NoFocus);
     m_view->setShowGrid(true);
+
     m_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    m_view->horizontalHeader()->setSectionResizeMode(SourceTableModel::Col_Enabled,
+    m_view->horizontalHeader()->setSectionResizeMode(SourceTableModel::Col_Action,
+                                                     QHeaderView::ResizeToContents);
+    m_view->horizontalHeader()->setSectionResizeMode(SourceTableModel::Col_Remove,
                                                      QHeaderView::ResizeToContents);
 
     l->addWidget(m_view);
 
-    // Коннекты
     connect(m_model, &QAbstractTableModel::rowsInserted, this, &SourceConfigWidget::onRowsInserted);
-
-    // Обработка изменения чекбокса (для закрытия/открытия редакторов)
     connect(m_model, &QAbstractTableModel::dataChanged, this, &SourceConfigWidget::onDataChanged);
 
     connect(btnAdd, &QPushButton::clicked, this, &SourceConfigWidget::onAddClicked);
-    connect(btnDel, &QPushButton::clicked, this, &SourceConfigWidget::onRemoveClicked);
     connect(btnApply, &QPushButton::clicked, this, &SourceConfigWidget::onApplyClicked);
 
     if (m_controller)
@@ -537,19 +764,28 @@ SourceConfigWidget::SourceConfigWidget(Controller *c, QWidget *p)
 
 void SourceConfigWidget::onRowsInserted(const QModelIndex &, int first, int last)
 {
-    for (int i = first; i <= last; ++i)
-        updateEditorsState(i);
+    openEditorsForRange(first, last);
 }
 
 void SourceConfigWidget::onDataChanged(const QModelIndex &topLeft,
                                        const QModelIndex &bottomRight,
                                        const QVector<int> &)
 {
-    // Если изменился чекбокс (Col_Enabled = 0), обновляем редакторы в этой строке
-    if (topLeft.column() <= SourceTableModel::Col_Enabled
-        && bottomRight.column() >= SourceTableModel::Col_Enabled) {
-        for (int r = topLeft.row(); r <= bottomRight.row(); ++r) {
-            updateEditorsState(r);
+    if (m_mode == SourceEditMode::Inline) {
+        // Переоткрываем редактор юнитов при смене категории
+        if (topLeft.column() <= SourceTableModel::Col_Category
+            && bottomRight.column() >= SourceTableModel::Col_Category) {
+            for (int r = topLeft.row(); r <= bottomRight.row(); ++r) {
+                QModelIndex idxUnit = m_model->index(r, SourceTableModel::Col_Unit);
+                m_view->closePersistentEditor(idxUnit);
+                m_view->openPersistentEditor(idxUnit);
+            }
+        }
+
+        if (topLeft.column() <= SourceTableModel::Col_Action
+            && bottomRight.column() >= SourceTableModel::Col_Action) {
+            for (int r = topLeft.row(); r <= bottomRight.row(); ++r)
+                updateEditorsState(r);
         }
     }
 }
@@ -558,40 +794,104 @@ void SourceConfigWidget::updateEditorsState(int row)
 {
     bool enabled = m_model->isRowEnabled(row);
 
-    // Проходим по всем колонкам кроме чекбокса
+    if (m_mode == SourceEditMode::Dialog) {
+        m_view->openPersistentEditor(m_model->index(row, SourceTableModel::Col_Action));
+        m_view->openPersistentEditor(m_model->index(row, SourceTableModel::Col_Remove));
+        return;
+    }
+
     for (int col = 1; col < SourceTableModel::Col_Count; ++col) {
         QModelIndex idx = m_model->index(row, col);
-        if (enabled) {
+        if (col == SourceTableModel::Col_Remove) {
             m_view->openPersistentEditor(idx);
         } else {
-            m_view->closePersistentEditor(idx);
+            if (enabled)
+                m_view->openPersistentEditor(idx);
+            else
+                m_view->closePersistentEditor(idx);
         }
     }
+}
+
+void SourceConfigWidget::openEditorsForRange(int first, int last)
+{
+    for (int r = first; r <= last; ++r)
+        updateEditorsState(r);
 }
 
 void SourceConfigWidget::onAddClicked()
 {
-    SourceAddDialog d(this);
-    if (d.exec() == QDialog::Accepted) {
+    if (m_mode == SourceEditMode::Dialog) {
+        SourceAddDialog d(this);
+        int cnt = m_model->rowCount(QModelIndex()) + 1;
+        Source def;
+        do {
+            def.id = "channel_" + std::to_string(cnt++);
+        } while (!m_model->isIdUnique(QString::fromStdString(def.id)));
+        d.setSource(def);
+
+        while (true) {
+            if (d.exec() == QDialog::Accepted) {
+                QString err;
+                Source s = d.getSource();
+                if (m_model->addSource(s, err)) {
+                    break;
+                } else {
+                    QMessageBox::warning(this, "Error", err);
+                }
+            } else {
+                break;
+            }
+        }
+    } else {
+        // INLINE MODE
+        Source s;
+        int cnt = m_model->rowCount(QModelIndex()) + 1;
+        do {
+            s.id = "channel_" + std::to_string(cnt++);
+        } while (!m_model->isIdUnique(QString::fromStdString(s.id)));
+
+        s.defaultUnit = EvoUnit::MeasUnit::Dimensionless;
+
         QString err;
-        if (!m_model->addSource(d.getSource(), err)) {
-            QMessageBox::warning(this, "Error", err);
+        m_model->addSource(s, err);
+    }
+}
+
+void SourceConfigWidget::onEditRequested(int row)
+{
+    if (m_mode != SourceEditMode::Dialog)
+        return;
+
+    SourceAddDialog d(this);
+    d.setWindowTitle("Edit Channel");
+    d.setSource(m_model->getSourceAt(row));
+    d.setIdEditable(true);
+
+    // Цикл валидации ID при редактировании
+    while (true) {
+        if (d.exec() == QDialog::Accepted) {
+            Source newSource = d.getSource();
+            QString newId = QString::fromStdString(newSource.id);
+            if (m_model->isIdUnique(newId, row)) {
+                m_model->updateSource(row, newSource);
+                break;
+            } else {
+                QMessageBox::warning(this, "Error", "ID already exists. Must be unique.");
+            }
+        } else {
+            break;
         }
     }
 }
 
-void SourceConfigWidget::onRemoveClicked()
-{
-    m_model->removeSource(m_view->currentIndex().row());
-}
+void SourceConfigWidget::onRemoveClicked() {}
 
 void SourceConfigWidget::loadFromController()
 {
     if (m_controller) {
         m_model->setSources(m_controller->getSources());
-        // После загрузки обновляем все редакторы
-        for (int i = 0; i < m_model->rowCount(QModelIndex()); ++i)
-            updateEditorsState(i);
+        openEditorsForRange(0, m_model->rowCount(QModelIndex()) - 1);
     }
 }
 
@@ -604,20 +904,15 @@ void SourceConfigWidget::onApplyClicked()
 {
     if (!m_controller)
         return;
-
     if (m_view->focusWidget())
         m_view->focusWidget()->clearFocus();
 
     m_controller->stop();
     m_controller->clearSources();
-
-    // getSources возвращает только enabled строки (как мы договорились)
-    QVector<Source> sources = m_model->getSources();
-    for (const auto &s : sources)
+    for (const auto &s : m_model->getSources())
         m_controller->addModbusSource(s);
-
     m_controller->start();
-    QMessageBox::information(this, "Success", "Configuration Applied (Active channels only)");
+    QMessageBox::information(this, "Success", "Configuration Applied");
 }
 
 } // namespace EvoGui

@@ -18,10 +18,13 @@ Q_NAMESPACE
 enum class MeasUnit {
     Unknown = 0,
 
+    // --- Безразмерная (Dimensionless) ---
+    Dimensionless, // [NEW]
+
     // --- Длина ---
     Millimeter,
     Centimeter,
-    Decimeter, // дм
+    Decimeter,
     Meter,
     Kilometer,
     Micrometer,
@@ -29,7 +32,7 @@ enum class MeasUnit {
     Inch,
     Foot,
     Yard,
-    Mil, // мил (1/1000 дюйма)
+    Mil,
 
     // --- Время ---
     Second,
@@ -126,6 +129,7 @@ Q_ENUM_NS(MeasUnit)
 // 2. Категории
 enum class UnitCategory {
     Unknown,
+    Dimensionless, // [NEW]
     Length,
     Time,
     Temperature,
@@ -179,7 +183,7 @@ private:
 
 double convert(double val, MeasUnit from, MeasUnit to);
 UnitCategory category(MeasUnit u);
-QString categoryName(UnitCategory type); // [NEW] Получить имя категории
+QString categoryName(UnitCategory type);
 QList<MeasUnit> unitsByType(UnitCategory type);
 bool isCompatible(MeasUnit u1, MeasUnit u2);
 
@@ -231,7 +235,7 @@ public:
     Q_INVOKABLE QString name(EvoUnit::MeasUnit u);
 
     Q_INVOKABLE EvoUnit::UnitCategory category(EvoUnit::MeasUnit u);
-    Q_INVOKABLE QString categoryName(EvoUnit::UnitCategory type); // [NEW]
+    Q_INVOKABLE QString categoryName(EvoUnit::UnitCategory type);
 
     Q_INVOKABLE QVariantList unitsByType(EvoUnit::UnitCategory type);
     Q_INVOKABLE QVariantMap parse(const QString &input);

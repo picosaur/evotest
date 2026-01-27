@@ -73,6 +73,9 @@ static void initRegistry()
     UnitDef K{1.0, 0.0, {0, 0, 0, 1, 0}};  // Кельвин
     UnitDef A{1.0, 0.0, {0, 0, 0, 0, 1}};  // Ампер
 
+    // --- БЕЗРАЗМЕРНАЯ ---
+    UnitDef dimless{1.0, 0.0, {0, 0, 0, 0, 0}};
+
     // --- 1. ДЛИНА ---
     UnitDef mm = m * 0.001;
     UnitDef cm = m * 0.01;
@@ -152,6 +155,13 @@ static void initRegistry()
     // =========================================================================
     // ЗАПОЛНЕНИЕ РЕЕСТРА
     // =========================================================================
+
+    // БЕЗРАЗМЕРНАЯ
+    add(MeasUnit::Dimensionless,
+        dimless,
+        UnitCategory::Dimensionless,
+        QT_TR_NOOP("-"),
+        QT_TR_NOOP("Безразмерная"));
 
     // ДЛИНА
     add(MeasUnit::Millimeter, mm, UnitCategory::Length, QT_TR_NOOP("мм"), QT_TR_NOOP("Миллиметр"));
@@ -449,6 +459,9 @@ QString categoryName(UnitCategory type)
 {
     const char *key = nullptr;
     switch (type) {
+    case UnitCategory::Dimensionless:
+        key = QT_TR_NOOP("Безразмерная");
+        break;
     case UnitCategory::Length:
         key = QT_TR_NOOP("Длина");
         break;
@@ -583,6 +596,7 @@ Converter::Converter(MeasUnit from, MeasUnit to)
 
     double ratio = dFrom.factor() / dTo.factor();
     m_slope = ratio;
+    // Корректная логика offset:
     m_offset = (dFrom.offset() * ratio) - dTo.offset();
     m_valid = true;
 }
