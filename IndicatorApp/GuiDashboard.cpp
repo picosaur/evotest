@@ -1,40 +1,91 @@
 #include "GuiDashboard.h"
 #include <QComboBox>
-#include <QHBoxLayout>
+#include <QDebug>
 #include <QHeaderView>
-#include <QInputDialog>
-#include <QMessageBox>
-#include <QPushButton>
 #include <QVBoxLayout>
 
 namespace EvoGui {
 using namespace EvoModbus;
 
-// Хелпер для заполнения комбобокса (локальный)
+// Хелпер
 static void fillUnitsByCategory(QComboBox *cb, EvoUnit::UnitCategory cat)
 {
     cb->clear();
-    QList<EvoUnit::MeasUnit> units = EvoUnit::unitsByType(cat);
-    for (auto u : units)
-        cb->addItem(EvoUnit::name(u), (int) u);
+    // Добавляем "Auto" (родная единица)
+    cb->addItem("Auto (Native)", (int) EvoUnit::MeasUnit::Unknown);
+
+    if (cat != EvoUnit::UnitCategory::Unknown) {
+        QList<EvoUnit::MeasUnit> units = EvoUnit::unitsByType(cat);
+        for (auto u : units)
+            cb->addItem(EvoUnit::name(u), (int) u);
+    }
 }
 
 // =========================================================
-// MONITOR TABLE MODEL
+// TABLE MODEL
 // =========================================================
 
 MonitorTableModel::MonitorTableModel(Controller *c, QObject *p)
     : QAbstractTableModel(p)
     , m_controller(c)
 {
+    // При обновлении данных в контроллере обновляем таблицу
     connect(m_controller, &Controller::channelsUpdated, this, &MonitorTableModel::onDataUpdated);
+    // Первичная синхронизация
+    syncRows();
 }
 
 void MonitorTableModel::onDataUpdated()
 {
-    // Обновляем только колонку со значениями (индекс 2)
-    if (rowCount() > 0) {
-        emit dataChanged(index(0, Col_Value), index(rowCount() - 1, Col_Value));
+    // 1. Синхронизируем структуру (если появились новые каналы или удалились старые)
+    syncRows();
+
+    // 2. Обновляем значения (все строки, колонка Value)
+    if (!m_rows.isEmpty()) {
+        QModelIndex topLeft = index(0, Col_Value);
+        QModelIndex bottomRight = index(m_rows.size() - 1, Col_Value);
+        emit dataChanged(topLeft, bottomRight, {Qt::DisplayRole});
+
+        // Также обновляем NativeUnit, вдруг он сменился в конфиге
+        QModelIndex tlNative = index(0, Col_NativeUnit);
+        QModelIndex brNative = index(m_rows.size() - 1, Col_NativeUnit);
+        emit dataChanged(tlNative, brNative, {Qt::DisplayRole});
+    }
+}
+
+void MonitorTableModel::syncRows()
+{
+    auto channels = m_controller->getChannels(); // QMap<QString, ChannelData>
+    QList<QString> currentIds = channels.keys();
+
+    // Простой алгоритм синхронизации:
+    // 1. Удаляем из m_rows те, которых нет в channels
+    for (int i = m_rows.size() - 1; i >= 0; --i) {
+        if (!channels.contains(m_rows[i].id)) {
+            beginRemoveRows(QModelIndex(), i, i);
+            m_rows.removeAt(i);
+            endRemoveRows();
+        }
+    }
+
+    // 2. Добавляем в m_rows те, которые есть в channels, но нет у нас
+    // Для оптимизации поиска можно использовать QSet, но для GUI списка < 1000 элементов это не критично
+    for (const QString &id : currentIds) {
+        bool found = false;
+        for (const auto &row : m_rows) {
+            if (row.id == id) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            beginInsertRows(QModelIndex(), m_rows.size(), m_rows.size());
+            MonitorRow newRow;
+            newRow.id = id;
+            newRow.displayUnit = EvoUnit::MeasUnit::Unknown; // По умолчанию Auto
+            m_rows.append(newRow);
+            endInsertRows();
+        }
     }
 }
 
@@ -47,44 +98,56 @@ int MonitorTableModel::columnCount(const QModelIndex &) const
     return Col_Count;
 }
 
-void MonitorTableModel::addRow(const QString &id)
-{
-    auto ch = m_controller->getChannels().value(id);
-    beginInsertRows({}, m_rows.size(), m_rows.size());
-    m_rows.append({id, ch.unit});
-    endInsertRows();
-}
-
-void MonitorTableModel::removeRow(int r)
-{
-    if (r >= 0 && r < m_rows.size()) {
-        beginRemoveRows({}, r, r);
-        m_rows.removeAt(r);
-        endRemoveRows();
-    }
-}
-
 QVariant MonitorTableModel::data(const QModelIndex &idx, int role) const
 {
     if (!idx.isValid() || idx.row() >= m_rows.size())
         return {};
+
     const auto &row = m_rows[idx.row()];
 
+    // Получаем актуальные данные из контроллера
+    auto channels = m_controller->getChannels();
+    if (!channels.contains(row.id))
+        return QVariant(); // Should not happen after sync
+
+    ChannelData chData = channels[row.id];
+
     if (role == Qt::DisplayRole) {
-        if (idx.column() == Col_ID)
+        switch (idx.column()) {
+        case Col_ID:
             return row.id;
-        if (idx.column() == Col_DisplayUnit)
+
+        case Col_DisplayUnit: {
+            if (row.displayUnit == EvoUnit::MeasUnit::Unknown)
+                return "Auto";
             return EvoUnit::name(row.displayUnit);
-        if (idx.column() == Col_Value) {
-            auto ch = m_controller->getChannels().value(row.id);
-            double val = ch.value.toDouble();
-            // Конвертация "на лету" для отображения
-            double conv = EvoUnit::convert(val, ch.unit, row.displayUnit);
-            return QString::number(conv, 'f', 2);
+        }
+
+        case Col_NativeUnit:
+            return EvoUnit::name(chData.unit);
+
+        case Col_Value: {
+            double val = chData.value.toDouble();
+            EvoUnit::MeasUnit targetUnit = row.displayUnit;
+
+            // Если пользователь не выбрал юнит, берем родной
+            if (targetUnit == EvoUnit::MeasUnit::Unknown) {
+                targetUnit = chData.unit;
+            }
+
+            // Пытаемся конвертировать
+            double convertedVal = EvoUnit::convert(val, chData.unit, targetUnit);
+
+            // Форматируем число
+            return QString::number(convertedVal, 'f', 2);
+        }
         }
     }
-    if (role == Qt::EditRole && idx.column() == Col_DisplayUnit)
+
+    if (role == Qt::EditRole && idx.column() == Col_DisplayUnit) {
         return (int) row.displayUnit;
+    }
+
     return {};
 }
 
@@ -93,7 +156,7 @@ bool MonitorTableModel::setData(const QModelIndex &idx, const QVariant &val, int
     if (role == Qt::EditRole && idx.column() == Col_DisplayUnit) {
         m_rows[idx.row()].displayUnit = (EvoUnit::MeasUnit) val.toInt();
         emit dataChanged(idx, idx);
-        // Принудительно обновляем значение, т.к. оно зависит от Unit
+        // Значение зависит от юнита, обновляем и его
         emit dataChanged(index(idx.row(), Col_Value), index(idx.row(), Col_Value));
         return true;
     }
@@ -103,12 +166,16 @@ bool MonitorTableModel::setData(const QModelIndex &idx, const QVariant &val, int
 QVariant MonitorTableModel::headerData(int sec, Qt::Orientation o, int r) const
 {
     if (r == Qt::DisplayRole && o == Qt::Horizontal) {
-        if (sec == Col_ID)
-            return "ID";
-        if (sec == Col_DisplayUnit)
-            return "Display Unit";
-        if (sec == Col_Value)
+        switch (sec) {
+        case Col_ID:
+            return "Channel ID";
+        case Col_DisplayUnit:
+            return "View Unit (Edit)";
+        case Col_Value:
             return "Value";
+        case Col_NativeUnit:
+            return "Native Unit";
+        }
     }
     return {};
 }
@@ -117,13 +184,16 @@ Qt::ItemFlags MonitorTableModel::flags(const QModelIndex &idx) const
 {
     if (!idx.isValid())
         return Qt::NoItemFlags;
+
+    // Редактируемая только колонка DisplayUnit
     if (idx.column() == Col_DisplayUnit)
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
+
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 // =========================================================
-// MONITOR DELEGATE
+// DELEGATE (Для выбора единицы отображения)
 // =========================================================
 
 MonitorDelegate::MonitorDelegate(Controller *c, QObject *p)
@@ -137,16 +207,15 @@ QWidget *MonitorDelegate::createEditor(QWidget *p,
 {
     if (idx.column() == MonitorTableModel::Col_DisplayUnit) {
         QComboBox *cb = new QComboBox(p);
-        // Получаем ID канала из этой строки
-        QString id = idx.sibling(idx.row(), 0).data().toString();
-        auto ch = m_controller->getChannels().value(id);
 
-        EvoUnit::UnitCategory cat = EvoUnit::category(ch.unit);
-
-        if (cat != EvoUnit::UnitCategory::Unknown)
+        // Узнаем ID канала
+        QString id = idx.sibling(idx.row(), MonitorTableModel::Col_ID).data().toString();
+        // Узнаем его родную категорию из контроллера
+        auto channels = m_controller->getChannels();
+        if (channels.contains(id)) {
+            EvoUnit::UnitCategory cat = EvoUnit::category(channels[id].unit);
             fillUnitsByCategory(cb, cat);
-        else
-            cb->addItem("Unknown", (int) EvoUnit::MeasUnit::Unknown);
+        }
         return cb;
     }
     return nullptr;
@@ -155,68 +224,46 @@ QWidget *MonitorDelegate::createEditor(QWidget *p,
 void MonitorDelegate::setEditorData(QWidget *e, const QModelIndex &idx) const
 {
     if (auto *cb = qobject_cast<QComboBox *>(e)) {
-        int i = cb->findData(idx.model()->data(idx, Qt::EditRole).toInt());
+        int val = idx.model()->data(idx, Qt::EditRole).toInt();
+        int i = cb->findData(val);
         if (i >= 0)
             cb->setCurrentIndex(i);
     }
 }
+
 void MonitorDelegate::setModelData(QWidget *e, QAbstractItemModel *m, const QModelIndex &idx) const
 {
-    if (auto *cb = qobject_cast<QComboBox *>(e))
+    if (auto *cb = qobject_cast<QComboBox *>(e)) {
         m->setData(idx, cb->currentData(), Qt::EditRole);
+    }
 }
 
 // =========================================================
-// DASHBOARD WIDGET
+// WIDGET
 // =========================================================
 
 DashboardWidget::DashboardWidget(Controller *c, QWidget *p)
     : QWidget(p)
-    , m_controller(c)
 {
-    auto *l = new QVBoxLayout(this);
-    auto *tb = new QHBoxLayout();
-    auto *btnAdd = new QPushButton("Add Watch");
-    auto *btnDel = new QPushButton("Remove");
-    tb->addWidget(btnAdd);
-    tb->addWidget(btnDel);
-    tb->addStretch();
-    l->addLayout(tb);
+    auto *layout = new QVBoxLayout(this);
 
+    // Таблица занимает всё пространство
     m_model = new MonitorTableModel(c, this);
-    auto *tv = new QTableView(this);
-    tv->setModel(m_model);
-    tv->setItemDelegate(new MonitorDelegate(c, this));
-    tv->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    l->addWidget(tv);
+    m_view = new QTableView(this);
 
-    m_view = tv; // Сохраняем указатель для удаления
+    m_view->setModel(m_model);
+    m_view->setItemDelegate(new MonitorDelegate(c, this));
 
-    // СВЯЗЫВАЕМ СИГНАЛЫ СО СЛОТАМИ КЛАССА
-    connect(btnAdd, &QPushButton::clicked, this, &DashboardWidget::onAddClicked);
-    connect(btnDel, &QPushButton::clicked, this, &DashboardWidget::onRemoveClicked);
-}
+    m_view->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_view->setAlternatingRowColors(true);
+    m_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    // Колонка Value и ID получают больше места, юниты меньше
+    m_view->horizontalHeader()->setSectionResizeMode(MonitorTableModel::Col_DisplayUnit,
+                                                     QHeaderView::ResizeToContents);
+    m_view->horizontalHeader()->setSectionResizeMode(MonitorTableModel::Col_NativeUnit,
+                                                     QHeaderView::ResizeToContents);
 
-void DashboardWidget::onAddClicked()
-{
-    bool ok;
-    QString id
-        = QInputDialog::getText(this, "Watch", "Enter Channel ID:", QLineEdit::Normal, "", &ok);
-    if (ok && !id.isEmpty()) {
-        if (m_controller->getChannels().contains(id)) {
-            m_model->addRow(id);
-        } else {
-            QMessageBox::warning(this, "Error", "Channel ID not found in controller.");
-        }
-    }
-}
-
-void DashboardWidget::onRemoveClicked()
-{
-    QModelIndex idx = m_view->currentIndex();
-    if (idx.isValid()) {
-        m_model->removeRow(idx.row());
-    }
+    layout->addWidget(m_view);
 }
 
 } // namespace EvoGui

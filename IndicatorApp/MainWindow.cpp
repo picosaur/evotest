@@ -60,12 +60,14 @@ void MainWindow::setupUi()
 
     // 1. Hardware Config
     m_sourceWidget = new EvoGui::SourceConfigWidget(m_controller,
-                                                    EvoGui::SourceEditMode::Inline,
+                                                    EvoGui::SourceEditMode::Dialog,
                                                     this);
     m_tabs->addTab(m_sourceWidget, "1. Channels (Hardware)");
 
     // 2. Logic Config
-    m_formulaWidget = new EvoGui::FormulaConfigWidget(m_controller, this);
+    m_formulaWidget = new EvoGui::FormulaConfigWidget(m_controller,
+                                                      EvoGui::SourceEditMode::Dialog,
+                                                      this);
     m_tabs->addTab(m_formulaWidget, "2. Formulas (Logic)");
 
     // 3. Dashboard

@@ -11,7 +11,9 @@ static const int MAX_GAP{10};
 static const int MAX_PDU{120};
 static const int MAX_PDU_BITS{1900};
 
-// --- MANAGER ---
+// =========================================================
+// MANAGER IMPLEMENTATION
+// =========================================================
 
 Manager::Manager(QObject *parent)
     : QObject(parent)
@@ -65,11 +67,11 @@ void Manager::connectTo(const QString &ip, int port)
     m_modbus->setTimeout(1000);
     m_modbus->connectDevice();
 }
-
 void Manager::disconnectFrom()
 {
     m_modbus->disconnectDevice();
 }
+
 void Manager::startPolling(int intervalMs)
 {
     if (m_recalcNeeded)
@@ -89,45 +91,63 @@ void Manager::onStateChanged(QModbusDevice::State state)
 }
 
 // Write Logic
-bool Manager::writeValue(int sa, int addr, const QVariant &val, ValueType type, ByteOrder order)
+bool Manager::writeBit(int serverAddress, int address, bool value)
 {
-    // Упрощенная реализация записи (пример)
-    QModbusDataUnit unit(QModbusDataUnit::HoldingRegisters, addr, 0);
-    QVector<quint16> regs;
-
-    if (type == ValueType::Bool) {
-        unit.setRegisterType(QModbusDataUnit::Coils);
-        unit.setValueCount(1);
-        unit.setValue(0, val.toBool() ? 1 : 0);
-    } else {
-        if (type == ValueType::Float)
-            regs = decomposeFloat(val.toFloat(), (int) order);
-        else if (type == ValueType::UInt32 || type == ValueType::Int32)
-            regs = decomposeUInt32(val.toUInt(), (int) order);
+    if (m_modbus->state() != QModbusDevice::ConnectedState)
+        return false;
+    QModbusDataUnit unit(QModbusDataUnit::Coils, address, 1);
+    unit.setValue(0, value ? 1 : 0);
+    if (auto *reply = m_modbus->sendWriteRequest(unit, serverAddress)) {
+        if (!reply->isFinished())
+            connect(reply, &QModbusReply::finished, this, &Manager::onWriteReplyFinished);
         else
-            regs.append((quint16) val.toUInt());
-
-        unit.setRegisterType(QModbusDataUnit::HoldingRegisters);
-        unit.setValueCount(regs.size());
-        unit.setValues(regs);
-    }
-
-    if (auto *reply = m_modbus->sendWriteRequest(unit, sa)) {
-        connect(reply, &QModbusReply::finished, this, &Manager::onWriteReplyFinished);
+            reply->deleteLater();
         return true;
     }
     return false;
 }
+bool Manager::writeMultipleRegisters(int serverAddress,
+                                     int startAddress,
+                                     const QVector<quint16> &values)
+{
+    if (m_modbus->state() != QModbusDevice::ConnectedState || values.isEmpty())
+        return false;
+    QModbusDataUnit unit(QModbusDataUnit::HoldingRegisters, startAddress, values.size());
+    unit.setValues(values);
+    if (auto *reply = m_modbus->sendWriteRequest(unit, serverAddress)) {
+        if (!reply->isFinished())
+            connect(reply, &QModbusReply::finished, this, &Manager::onWriteReplyFinished);
+        else
+            reply->deleteLater();
+        return true;
+    }
+    return false;
+}
+bool Manager::writeValue(int sa, int addr, const QVariant &val, ValueType type, ByteOrder order)
+{
+    if (type == ValueType::Bool)
+        return writeBit(sa, addr, val.toBool());
+    QVector<quint16> regs;
+    if (type == ValueType::UInt16 || type == ValueType::Int16)
+        regs.append(static_cast<quint16>(val.toUInt()));
+    else if (type == ValueType::UInt32 || type == ValueType::Int32)
+        regs = decomposeUInt32(val.toUInt(), (int) order);
+    else if (type == ValueType::Float)
+        regs = decomposeFloat(val.toFloat(), (int) order);
+    else
+        return false;
+    return writeMultipleRegisters(sa, addr, regs);
+}
 void Manager::onWriteReplyFinished()
 {
-    auto r = qobject_cast<QModbusReply *>(sender());
-    if (r) {
-        if (r->error() == QModbusDevice::NoError)
-            emit writeFinished();
-        else
-            emit errorOccurred("Write: " + r->errorString());
-        r->deleteLater();
-    }
+    auto reply = qobject_cast<QModbusReply *>(sender());
+    if (!reply)
+        return;
+    if (reply->error() != QModbusDevice::NoError)
+        emit errorOccurred("Write Error: " + reply->errorString());
+    else
+        emit writeFinished();
+    reply->deleteLater();
 }
 
 // Read Logic
@@ -172,7 +192,6 @@ void Manager::recalculateBlocks()
     m_blocks.append(cur);
     m_recalcNeeded = false;
 }
-
 void Manager::onPollTimer()
 {
     if (m_modbus->state() != QModbusDevice::ConnectedState)
@@ -187,7 +206,6 @@ void Manager::onPollTimer()
         }
     }
 }
-
 void Manager::onReadReady()
 {
     auto r = qobject_cast<QModbusReply *>(sender());
@@ -204,8 +222,11 @@ void Manager::onReadReady()
                 && (s.valueAddress + len) <= (unit.startAddress() + unit.valueCount())) {
                 int off = s.valueAddress - unit.startAddress();
                 QVector<quint16> d;
-                for (int k = 0; k < len; ++k)
-                    d.append(unit.value(off + k));
+                if (s.isBitType())
+                    d.append(unit.value(off));
+                else
+                    for (int k = 0; k < len; ++k)
+                        d.append(unit.value(off + k));
                 QVariant v = parseValue(s, d);
                 QString k = QString::fromStdString(s.id);
                 if (m_rawData.value(k) != v) {
@@ -220,6 +241,7 @@ void Manager::onReadReady()
     r->deleteLater();
 }
 
+// Helpers
 int Manager::getRegisterCount(int t)
 {
     return (t >= (int) ValueType::UInt32) ? 2 : 1;
@@ -229,46 +251,84 @@ QVariant Manager::parseValue(const Source &src, const QVector<quint16> &d)
     if (d.isEmpty())
         return {};
     ValueType t = (ValueType) src.valueType;
+    if (t == ValueType::Bool)
+        return (bool) d[0];
     if (t == ValueType::UInt16)
         return d[0];
-    if (t == ValueType::Float && d.size() == 2) {
-        quint32 i = composeUInt32(d[0], d[1], src.byteOrder);
-        float f;
-        std::memcpy(&f, &i, 4);
-        return f;
-    }
-    return d[0];
+    if (t == ValueType::Int16)
+        return (qint16) d[0];
+    if (d.size() < 2)
+        return {};
+    if (t == ValueType::UInt32)
+        return composeUInt32(d[0], d[1], src.byteOrder);
+    if (t == ValueType::Int32)
+        return (qint32) composeUInt32(d[0], d[1], src.byteOrder);
+    if (t == ValueType::Float)
+        return composeFloat(d[0], d[1], src.byteOrder);
+    return {};
 }
-
-// Helpers (Decompose/Compose) - simplified for brevity
 quint32 Manager::composeUInt32(quint16 w1, quint16 w2, int order)
 {
-    if (order == 0)
+    quint8 a = (w1 >> 8) & 0xFF, b = w1 & 0xFF, c = (w2 >> 8) & 0xFF, d = w2 & 0xFF;
+    switch ((ByteOrder) order) {
+    case ByteOrder::ABCD:
         return (w1 << 16) | w2;
-    return (w2 << 16) | w1; // Simplified ABCD vs CDAB
+    case ByteOrder::CDAB:
+        return (w2 << 16) | w1;
+    case ByteOrder::DCBA:
+        return (d << 24) | (c << 16) | (b << 8) | a;
+    case ByteOrder::BADC:
+        return (b << 24) | (a << 16) | (d << 8) | c;
+    }
+    return 0;
 }
 float Manager::composeFloat(quint16 w1, quint16 w2, int order)
 {
     quint32 i = composeUInt32(w1, w2, order);
     float f;
-    std::memcpy(&f, &i, 4);
+    std::memcpy(&f, &i, sizeof(float));
     return f;
 }
 QVector<quint16> Manager::decomposeUInt32(quint32 val, int order)
 {
     QVector<quint16> res;
-    res.append(val >> 16);
-    res.append(val & 0xFFFF);
-    return res; // Simplified
+    quint8 a = (val >> 24) & 0xFF;
+    quint8 b = (val >> 16) & 0xFF;
+    quint8 c = (val >> 8) & 0xFF;
+    quint8 d = val & 0xFF;
+    quint16 w1 = 0, w2 = 0;
+    switch ((ByteOrder) order) {
+    case ByteOrder::ABCD:
+        w1 = (a << 8) | b;
+        w2 = (c << 8) | d;
+        break;
+    case ByteOrder::CDAB:
+        w1 = (c << 8) | d;
+        w2 = (a << 8) | b;
+        break;
+    case ByteOrder::DCBA:
+        w1 = (d << 8) | c;
+        w2 = (b << 8) | a;
+        break;
+    case ByteOrder::BADC:
+        w1 = (b << 8) | a;
+        w2 = (d << 8) | c;
+        break;
+    }
+    res.append(w1);
+    res.append(w2);
+    return res;
 }
 QVector<quint16> Manager::decomposeFloat(float val, int order)
 {
     quint32 i;
-    std::memcpy(&i, &val, 4);
+    std::memcpy(&i, &val, sizeof(float));
     return decomposeUInt32(i, order);
 }
 
-// --- CONTROLLER ---
+// =========================================================
+// CONTROLLER IMPLEMENTATION
+// =========================================================
 
 Controller::Controller(QObject *parent)
     : QObject(parent)
@@ -280,7 +340,6 @@ Controller::Controller(QObject *parent)
     m_jsEngine.globalObject().setProperty("IO", m_jsEngine.newQObject(this));
     m_jsEngine.globalObject().setProperty("EvoUnit", m_jsEngine.newQObject(m_unitGateway));
 
-    // Register EvoUnit Enums to JS globally
     QJSValue unitsObj = m_jsEngine.newObject();
     const QMetaObject &mo = EvoUnit::staticMetaObject;
     int index = mo.indexOfEnumerator("MeasUnit");
@@ -321,22 +380,77 @@ QVector<ComputedChannel> Controller::getComputedChannels() const
 
 void Controller::buildAndApplyScript()
 {
-    QString js;
+    QString js = "";
+
     for (const auto &ch : qAsConst(m_computedChannels)) {
-        js += QString("IO.set('%1', %2, %3);\n")
-                  .arg(QString::fromStdString(ch.id))
-                  .arg(ch.formula)
-                  .arg((int) ch.unit);
+        // Мы ожидаем, что ch.formula - это тело функции, которое возвращает значение.
+        // Оборачиваем в IIFE (Immediately Invoked Function Expression) для изоляции скоупа
+        // и передаем результат в IO.set
+
+        QString funcBody = ch.formula;
+        QString channelId = QString::fromStdString(ch.id);
+        int unitId = (int) ch.unit;
+
+        // Генерация кода:
+        // IO.set('id', (function(){ ... user code ... })(), unit);
+
+        QString line = QString("IO.set('%1', (function(){ %2 })(), %3);")
+                           .arg(channelId)
+                           .arg(funcBody)
+                           .arg(unitId);
+
+        js += line + "\n";
     }
+
+    // Устанавливаем итоговый скрипт, который будет выполняться каждый цикл
     setScript(js);
 }
 
 void Controller::setScript(const QString &code)
 {
+    // Оборачиваем весь скрипт в try-catch, чтобы ошибка в одной формуле не валила всё приложение
     QString full = "(function() { try { " + code + " } catch(e){ print('Script Error: ' + e); } })";
+
+    // Компилируем скрипт в функцию
     m_jsProcessFunction = m_jsEngine.evaluate(full);
-    if (m_jsProcessFunction.isError())
-        emit error("JS Compile: " + m_jsProcessFunction.toString());
+
+    if (m_jsProcessFunction.isError()) {
+        emit error("JS Compile Error: " + m_jsProcessFunction.toString());
+        qWarning() << "JS Error:" << m_jsProcessFunction.toString();
+    }
+}
+
+// [FIX] Проверка уникальности
+bool Controller::isIdUnique(const QString &id) const
+{
+    std::string sId = id.toStdString();
+    for (const auto &s : m_manager->getSources())
+        if (s.id == sId)
+            return false;
+    for (const auto &ch : m_computedChannels)
+        if (ch.id == sId)
+            return false;
+    // Проверка текущих каналов тоже (опционально, но лучше да)
+    if (m_channels.contains(id))
+        return false;
+    return true;
+}
+
+void Controller::addSource(const QVariantMap &c)
+{
+    Source s{};
+    if (c.contains("id"))
+        s.id = c["id"].toString().toStdString();
+    else
+        return;
+    s.serverAddress = c.value("server", 1).toInt();
+    s.valueAddress = c.value("address", 0).toInt();
+    s.valueType = c.value("type", 1).toInt();
+    s.regType = (QModbusDataUnit::RegisterType) c.value("reg", 4).toInt();
+    s.byteOrder = c.value("byteOrder", 0).toInt();
+    if (c.contains("unit"))
+        s.defaultUnit = static_cast<EvoUnit::MeasUnit>(c["unit"].toInt());
+    m_manager->addSource(s);
 }
 
 void Controller::connectToServer(const QString &ip, int port)
@@ -385,6 +499,67 @@ void Controller::onRawDataReceived()
     if (m_jsProcessFunction.isCallable())
         m_jsProcessFunction.call();
     emit channelsUpdated();
+}
+
+// =========================================================
+// BINDER IMPLEMENTATION
+// =========================================================
+
+Binder::Binder(Controller *c, QObject *p)
+    : QObject(p)
+    , m_controller(c)
+{
+    connect(m_controller, &Controller::channelsUpdated, this, &Binder::syncUI);
+}
+void Binder::bindLabel(QLabel *w, const std::string &id)
+{
+    if (w) {
+        m_bindings.append({w, id, 0, 1.0, nullptr});
+        syncUI();
+    }
+}
+void Binder::bindLCD(QLCDNumber *w, const std::string &id, double s)
+{
+    if (w) {
+        m_bindings.append({w, id, 1, s, nullptr});
+        syncUI();
+    }
+}
+void Binder::bindProgressBar(QProgressBar *w, const std::string &id)
+{
+    if (w) {
+        m_bindings.append({w, id, 2, 1.0, nullptr});
+        syncUI();
+    }
+}
+void Binder::bindCustom(const std::string &id, Callback cb)
+{
+    m_bindings.append({nullptr, id, 3, 1.0, cb});
+    syncUI();
+}
+
+void Binder::syncUI()
+{
+    auto ch = m_controller->getChannels();
+    for (const auto &b : qAsConst(m_bindings)) {
+        QString key = QString::fromStdString(b.id);
+        if (!ch.contains(key))
+            continue;
+        ChannelData d = ch[key];
+        double v = d.value.toDouble();
+        if (b.type == 3 && b.customCb) {
+            b.customCb(d);
+            continue;
+        }
+        if (b.widget.isNull())
+            continue;
+        if (b.type == 0)
+            static_cast<QLabel *>(b.widget.data())->setText(EvoUnit::format(v * b.scale, d.unit, 2));
+        else if (b.type == 1)
+            static_cast<QLCDNumber *>(b.widget.data())->display(v * b.scale);
+        else if (b.type == 2)
+            static_cast<QProgressBar *>(b.widget.data())->setValue((int) v);
+    }
 }
 
 } // namespace EvoModbus

@@ -8,17 +8,27 @@
 
 namespace EvoGui {
 
+// Структура строки монитора
 struct MonitorRow
 {
     QString id;
-    EvoUnit::MeasUnit displayUnit;
+    // Единица, в которой пользователь ХОЧЕТ видеть значение.
+    // Если Unknown, отображается в "родной" единице канала.
+    EvoUnit::MeasUnit displayUnit{EvoUnit::MeasUnit::Unknown};
 };
 
 class MonitorTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    enum Columns { Col_ID = 0, Col_DisplayUnit, Col_Value, Col_Count };
+    enum Columns {
+        Col_ID = 0,
+        Col_DisplayUnit,
+        Col_Value,
+        Col_NativeUnit, // Доп. колонка для инфо
+        Col_Count
+    };
+
     explicit MonitorTableModel(EvoModbus::Controller *controller, QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -30,15 +40,15 @@ public:
                         int role = Qt::DisplayRole) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    void addRow(const QString &id);
-    void removeRow(int idx);
-
 public slots:
     void onDataUpdated();
 
 private:
     EvoModbus::Controller *m_controller;
     QVector<MonitorRow> m_rows;
+
+    // Синхронизация списка строк с контроллером
+    void syncRows();
 };
 
 class MonitorDelegate : public QStyledItemDelegate
@@ -46,6 +56,7 @@ class MonitorDelegate : public QStyledItemDelegate
     Q_OBJECT
 public:
     explicit MonitorDelegate(EvoModbus::Controller *c, QObject *parent = nullptr);
+
     QWidget *createEditor(QWidget *parent,
                           const QStyleOptionViewItem &option,
                           const QModelIndex &index) const override;
@@ -64,12 +75,7 @@ class DashboardWidget : public QWidget
 public:
     explicit DashboardWidget(EvoModbus::Controller *c, QWidget *parent = nullptr);
 
-private slots:
-    void onAddClicked();    // Объявлено
-    void onRemoveClicked(); // Объявлено
-
 private:
-    EvoModbus::Controller *m_controller;
     MonitorTableModel *m_model{nullptr};
     QTableView *m_view{nullptr};
 };

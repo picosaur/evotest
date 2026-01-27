@@ -380,10 +380,12 @@ bool SourceTableModel::setData(const QModelIndex &idx, const QVariant &val, int 
         switch (idx.column()) {
         case Col_ID: {
             QString newId = val.toString();
+            // [FIX] Не даем сохранить пустой ID или дубликат в INLINE режиме
             if (newId.isEmpty())
                 return false;
             if (!isIdUnique(newId, idx.row()))
                 return false;
+
             s.id = newId.toStdString();
             changed = true;
             break;
@@ -571,34 +573,32 @@ QWidget *SourceDelegate::createEditor(QWidget *p,
         le->setValidator(new QRegExpValidator(ID_REGEX, le));
 
         connect(le, &QLineEdit::editingFinished, self, [self, le, idx, model]() {
-            // Проверяем, не удаляется ли виджет (иногда бывает при закрытии редактора)
+            // Fix: Проверка на видимость, чтобы избежать краша
             if (!le->isVisible())
                 return;
 
             QString txt = le->text();
+            QString old = model->data(idx, Qt::DisplayRole).toString();
 
-            // Если текст не изменился (например, просто кликнули и ушли), ничего не делаем
-            // Но в данном контексте мы не знаем старое значение в модели без запроса
-            QString oldTxt = model->data(idx, Qt::DisplayRole).toString();
-            if (txt == oldTxt)
+            if (txt == old)
                 return;
 
+            // [FIX] Блокируем сигналы, чтобы избежать рекурсии message box
             bool error = false;
-            QString errorMsg;
+            QString msg;
 
             if (txt.isEmpty()) {
                 error = true;
-                errorMsg = "ID cannot be empty";
+                msg = "ID cannot be empty";
             } else if (!model->isIdUnique(txt, idx.row())) {
                 error = true;
-                errorMsg = "ID must be unique";
+                msg = "ID must be unique";
             }
 
             if (error) {
-                // Блокируем сигналы, чтобы messagebox не вызвал рекурсию фокуса
                 le->blockSignals(true);
-                QMessageBox::warning(le, "Error", errorMsg);
-                le->setText(oldTxt);
+                QMessageBox::warning(le, "Error", msg);
+                le->setText(old);
                 le->setFocus();
                 le->blockSignals(false);
             } else {
@@ -608,6 +608,7 @@ QWidget *SourceDelegate::createEditor(QWidget *p,
         return le;
     }
 
+    // ... (Остальные редакторы)
     if (idx.column() == SourceTableModel::Col_Server
         || idx.column() == SourceTableModel::Col_Address) {
         auto *sb = new QSpinBox(p);
@@ -697,6 +698,7 @@ void SourceDelegate::setEditorData(QWidget *e, const QModelIndex &idx) const
 void SourceDelegate::setModelData(QWidget *e, QAbstractItemModel *m, const QModelIndex &idx) const
 {
     if (auto *le = qobject_cast<QLineEdit *>(e)) {
+        // Доп проверка не нужна, так как валидация в createEditor
         if (!le->text().isEmpty())
             m->setData(idx, le->text(), Qt::EditRole);
     } else if (auto *sb = qobject_cast<QSpinBox *>(e))
@@ -868,11 +870,12 @@ void SourceConfigWidget::onEditRequested(int row)
     d.setSource(m_model->getSourceAt(row));
     d.setIdEditable(true);
 
-    // Цикл валидации ID при редактировании
+    // [FIX] Цикл валидации ID при редактировании
     while (true) {
         if (d.exec() == QDialog::Accepted) {
             Source newSource = d.getSource();
             QString newId = QString::fromStdString(newSource.id);
+            // Проверка уникальности, исключая себя (row)
             if (m_model->isIdUnique(newId, row)) {
                 m_model->updateSource(row, newSource);
                 break;
@@ -885,8 +888,6 @@ void SourceConfigWidget::onEditRequested(int row)
     }
 }
 
-void SourceConfigWidget::onRemoveClicked() {}
-
 void SourceConfigWidget::loadFromController()
 {
     if (m_controller) {
@@ -897,21 +898,21 @@ void SourceConfigWidget::loadFromController()
 
 void SourceConfigWidget::applyToController()
 {
-    onApplyClicked();
-}
-
-void SourceConfigWidget::onApplyClicked()
-{
     if (!m_controller)
         return;
-    if (m_view->focusWidget())
-        m_view->focusWidget()->clearFocus();
 
     m_controller->stop();
     m_controller->clearSources();
     for (const auto &s : m_model->getSources())
         m_controller->addModbusSource(s);
     m_controller->start();
+}
+
+void SourceConfigWidget::onApplyClicked()
+{
+    if (m_view->focusWidget())
+        m_view->focusWidget()->clearFocus();
+    applyToController();
     QMessageBox::information(this, "Success", "Configuration Applied");
 }
 

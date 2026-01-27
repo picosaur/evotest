@@ -146,7 +146,6 @@ public:
 private slots:
     void onAddClicked();
     void onEditRequested(int row);
-    void onRemoveClicked();
     void onApplyClicked();
     void onRowsInserted(const QModelIndex &parent, int first, int last);
     void onDataChanged(const QModelIndex &topLeft,
