@@ -9,7 +9,7 @@
 #include <QTableWidget>
 #include <QTextEdit>
 #include <QTimer>
-#include "loggingmodbusserver.h"
+#include "LoggingModbusServer.h"
 
 class MainWindow : public QMainWindow
 {

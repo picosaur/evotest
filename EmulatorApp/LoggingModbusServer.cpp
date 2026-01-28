@@ -1,4 +1,4 @@
-#include "loggingmodbusserver.h"
+#include "LoggingModbusServer.h"
 #include <QDataStream>
 #include <QModbusPdu>
 

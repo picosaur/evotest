@@ -9,17 +9,15 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialBus SerialPort)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialBus SerialPort)
 
 set(PROJECT_SOURCES
         main.cpp
-        MainWindow.cpp
-        MainWindow.h
-        MainWindow.ui
-        Iso6892Form.h
-        Iso6892Form.cpp
-        Iso6892Form.ui
+        MainWindow.cpp MainWindow.h MainWindow.ui
+        Iso6892Form.h Iso6892Form.cpp Iso6892Form.ui
+        TcpConnForm.h TcpConnForm.cpp TcpConnForm.ui
+        MachineControl.h MachineControl.cpp
 )
 
 include(QCustomPlot.cmake)
@@ -43,11 +41,17 @@ else()
     else()
         add_executable(EvoLiteApp
             ${PROJECT_SOURCES}
+            TensilePlotWidget.h TensilePlotWidget.cpp
+            Iso6892Analyzer.h Iso6892Analyzer.cpp
         )
     endif()
 endif()
 
-target_link_libraries(EvoLiteApp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets QCustomPlot)
+target_link_libraries(EvoLiteApp PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::SerialBus
+    Qt${QT_VERSION_MAJOR}::SerialPort
+    QCustomPlot)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

@@ -6,195 +6,218 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1375</width>
-    <height>883</height>
+    <width>1400</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>ISO 6892-1 Tensile Test</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_7">
+  <layout class="QVBoxLayout" name="verticalLayout_Main">
    <item>
-    <widget class="QGroupBox" name="groupBox_4">
+    <widget class="QLabel" name="lblHeader">
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>18</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>ISO 6892-1 Металлические материалы. Испытания на растяжение</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="gbLiveData">
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>150</height>
+       <height>160</height>
       </size>
      </property>
      <property name="title">
-      <string/>
+      <string>Текущие показания</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
+     <layout class="QHBoxLayout" name="horizontalLayout_Live">
       <item>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Нагрузка (кН)</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLCDNumber" name="lcdNumber">
-            <property name="segmentStyle">
-             <enum>QLCDNumber::Flat</enum>
-            </property>
-            <property name="value" stdset="0">
-             <double>0.100000000000000</double>
-            </property>
-           </widget>
-          </item>
-         </layout>
+       <layout class="QVBoxLayout" name="vlLoad">
+        <item>
+         <widget class="QLabel" name="lblLoadTitle">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Нагрузка (кН)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
         </item>
-        <item row="0" column="1">
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Деформация (мм)</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLCDNumber" name="lcdNumber_2">
-            <property name="segmentStyle">
-             <enum>QLCDNumber::Flat</enum>
-            </property>
-            <property name="value" stdset="0">
-             <double>0.100000000000000</double>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="0" column="2">
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QLabel" name="label_3">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Напряжение (МПа)</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLCDNumber" name="lcdNumber_3">
-            <property name="segmentStyle">
-             <enum>QLCDNumber::Flat</enum>
-            </property>
-            <property name="value" stdset="0">
-             <double>0.100000000000000</double>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="0" column="3">
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <widget class="QLabel" name="label_9">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Время (с)</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLCDNumber" name="lcdNumber_4">
-            <property name="segmentStyle">
-             <enum>QLCDNumber::Flat</enum>
-            </property>
-            <property name="value" stdset="0">
-             <double>0.100000000000000</double>
-            </property>
-           </widget>
-          </item>
-         </layout>
+        <item>
+         <widget class="QLCDNumber" name="lcdLoad">
+          <property name="digitCount">
+           <number>7</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+          <property name="value" stdset="0">
+           <double>0.000000000000000</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
       <item>
-       <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="0">
-         <widget class="QPushButton" name="pushButton">
+       <layout class="QVBoxLayout" name="vlExt">
+        <item>
+         <widget class="QLabel" name="lblExtTitle">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
           <property name="text">
-           <string>Старт</string>
+           <string>Удлинение (мм)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="pushButton_3">
+        <item>
+         <widget class="QLCDNumber" name="lcdExtension">
+          <property name="digitCount">
+           <number>7</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="vlStress">
+        <item>
+         <widget class="QLabel" name="lblStressTitle">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Напряжение (МПа)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLCDNumber" name="lcdStress">
+          <property name="digitCount">
+           <number>7</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="vlTime">
+        <item>
+         <widget class="QLabel" name="lblTimeTitle">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Время (с)</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLCDNumber" name="lcdTime">
+          <property name="digitCount">
+           <number>6</number>
+          </property>
+          <property name="segmentStyle">
+           <enum>QLCDNumber::Flat</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QGridLayout" name="gridLayout_Controls">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="btnStart">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #4CAF50; color: white;</string>
+          </property>
+          <property name="text">
+           <string>СТАРТ</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="btnStop">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #F44336; color: white;</string>
+          </property>
+          <property name="text">
+           <string>СТОП</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="btnReturn">
           <property name="text">
            <string>Возврат</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QPushButton" name="pushButton_2">
-          <property name="text">
-           <string>Стоп</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QPushButton" name="pushButton_4">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="btnZero">
           <property name="text">
            <string>Обнулить</string>
           </property>
@@ -206,223 +229,370 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout_Content">
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QScrollArea" name="scrollArea">
        <property name="maximumSize">
         <size>
-         <width>400</width>
+         <width>450</width>
          <height>16777215</height>
         </size>
        </property>
-       <property name="title">
-        <string>Данные</string>
+       <property name="widgetResizable">
+        <bool>true</bool>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="2" column="1">
-           <widget class="QLineEdit" name="lineEdit"/>
-          </item>
-          <item row="14" column="0">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>Модуль упругости</string>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="1">
-           <widget class="QLineEdit" name="lineEdit_7"/>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Начальная длина (L0), мм</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="1">
-           <widget class="QLineEdit" name="lineEdit_9"/>
-          </item>
-          <item row="13" column="1">
-           <widget class="QLineEdit" name="lineEdit_6"/>
-          </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_17">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="1">
-           <widget class="QLineEdit" name="lineEdit_8"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLineEdit" name="lineEdit_2"/>
-          </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>Скорость, мм/мин</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QLineEdit" name="lineEdit_4"/>
-          </item>
-          <item row="12" column="0">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>Временное сопротивление</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="0">
-           <widget class="QLabel" name="label_11">
-            <property name="text">
-             <string>Условный предел текучести</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Толщина (a0), мм</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Остановка - &quot;Падение силы на X % от макс&quot;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>Тип</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QLineEdit" name="lineEdit_10"/>
-          </item>
-          <item row="15" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>Удлинение (машинное)</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QRadioButton" name="radioButton">
+       <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>448</width>
+          <height>669</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_Side">
+         <item>
+          <widget class="QGroupBox" name="gbGeometry">
+           <property name="title">
+            <string>1. Геометрия образца</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_Geo">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_Type">
               <property name="text">
-               <string>Круглый</string>
+               <string>Тип сечения:</string>
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QRadioButton" name="radioButton_2">
+            <item row="0" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_Type">
+              <item>
+               <widget class="QRadioButton" name="rbRound">
+                <property name="text">
+                 <string>Круглый</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="rbFlat">
+                <property name="text">
+                 <string>Плоский</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_D0">
               <property name="text">
-               <string>Плоский</string>
+               <string>Диаметр (d0), мм:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="sbDiameter">
+              <property name="decimals">
+               <number>2</number>
+              </property>
+              <property name="maximum">
+               <double>500.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>10.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_A0">
+              <property name="text">
+               <string>Толщина (a0), мм:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="sbThickness">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="decimals">
+               <number>2</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_B0">
+              <property name="text">
+               <string>Ширина (b0), мм:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="sbWidth">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="decimals">
+               <number>2</number>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_L0">
+              <property name="text">
+               <string>Нач. длина (L0), мм:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="sbL0">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <double>1000.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>50.000000000000000</double>
               </property>
              </widget>
             </item>
            </layout>
-          </item>
-          <item row="4" column="1">
-           <widget class="QLineEdit" name="lineEdit_3"/>
-          </item>
-          <item row="12" column="1">
-           <widget class="QLineEdit" name="lineEdit_5"/>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Диаметр (d0), мм</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_16">
-            <property name="font">
-             <font>
-              <family>Ubuntu</family>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Геометрия образца</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_18">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Параметры испытания</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Ширина (b0), мм</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="0">
-           <widget class="QLabel" name="label_20">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Результаты</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="gbParams">
+           <property name="title">
+            <string>2. Настройки теста</string>
+           </property>
+           <layout class="QFormLayout" name="formLayout_Params">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_Speed">
+              <property name="text">
+               <string>Скорость (мм/мин):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="sbSpeed">
+              <property name="value">
+               <double>5.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_Break">
+              <property name="text">
+               <string>Остановка (% спада):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSpinBox" name="sbBreakThreshold">
+              <property name="value">
+               <number>20</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="gbResults">
+           <property name="title">
+            <string>3. Результаты (Авто)</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_Res">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_Rm">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Прочность (Rm):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="leRm">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_Rp">
+              <property name="text">
+               <string>Текучесть (Rp0.2):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="leRp02">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_ReH">
+              <property name="text">
+               <string>Верх. предел (ReH):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLineEdit" name="leReH">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_ReL">
+              <property name="text">
+               <string>Ниж. предел (ReL):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLineEdit" name="leReL">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_E">
+              <property name="text">
+               <string>Модуль (E):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLineEdit" name="leE">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_At">
+              <property name="text">
+               <string>Удлинение (At):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="leAt">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_Ag">
+              <property name="text">
+               <string>Равн. удл. (Ag):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLineEdit" name="leAg">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="gbManual">
+           <property name="title">
+            <string>4. Ручные измерения</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_Manual">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_Lu">
+              <property name="text">
+               <string>Кон. длина (Lu):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="sbLu"/>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_ResA">
+              <property name="text">
+               <string>A: - %</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_Du">
+              <property name="text">
+               <string>Кон. диам. (du):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="sbDu"/>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="label_ResZ">
+              <property name="text">
+               <string>Z: - %</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0" colspan="3">
+             <widget class="QPushButton" name="btnCalcManual">
+              <property name="text">
+               <string>Пересчитать A и Z</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox_3">
+      <widget class="QGroupBox" name="gbPlot">
        <property name="title">
         <string>График</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_8">
+       <layout class="QVBoxLayout" name="verticalLayout_Plot">
         <item>
-         <widget class="QCustomPlot" name="widget" native="true"/>
+         <widget class="QCustomPlot" name="plotWidget" native="true"/>
         </item>
        </layout>
       </widget>
