@@ -77,6 +77,7 @@ private:
     // Вспомогательные методы
     void displayResults(const Iso6892Results &res);
     void setupPlot();
+    void sendCommand(int cmd);
 
     void replaceWidgetInGroupBox(QGroupBox *groupBox, QWidget *newWidget);
 };

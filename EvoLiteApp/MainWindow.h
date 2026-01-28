@@ -7,8 +7,9 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
-class TcpConnForm;
 class MachineControl;
+class TcpConnForm;
+class CommandForm;
 class Iso6892Form;
 
 class MainWindow : public QMainWindow
@@ -23,5 +24,6 @@ private:
     Ui::MainWindow *ui;
     MachineControl *m_machine;
     TcpConnForm *m_tcpConnForm;
+    CommandForm *m_commandForm;
     Iso6892Form *m_iso6892Form;
 };

@@ -6,6 +6,10 @@
 #include "ui_Iso6892Form.h"
 #include <cmath>
 
+namespace {
+inline static const int MACHINE_INTERVAL{500};
+}
+
 Iso6892Form::Iso6892Form(MachineControl *machine, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Iso6892Form)
@@ -132,7 +136,8 @@ void Iso6892Form::on_btnStart_clicked()
 
     // 5. Старт машины
     m_machine->setTestSpeed(static_cast<int>(ui->sbSpeed->value()));
-    m_machine->sendCommand(MachineControl::BitStartTest, true);
+
+    QTimer::singleShot(MACHINE_INTERVAL, [this]() { sendCommand(MachineControl::BitStartTest); });
 
     m_isTestRunning = true;
     ui->gbGeometry->setEnabled(false);
@@ -146,11 +151,7 @@ void Iso6892Form::on_btnStop_clicked()
     if (!m_machine->isConnected())
         return;
 
-    m_machine->sendCommand(MachineControl::BitStop, true);
-    QTimer::singleShot(500, [this]() {
-        if (m_machine->isConnected())
-            m_machine->sendCommand(MachineControl::BitStop, false);
-    });
+    sendCommand(MachineControl::BitStop);
 
     if (m_isTestRunning) {
         m_isTestRunning = false;
@@ -172,8 +173,11 @@ void Iso6892Form::on_btnStop_clicked()
 
 void Iso6892Form::on_btnReturn_clicked()
 {
-    if (m_machine->isConnected())
-        m_machine->sendCommand(MachineControl::BitDownMMMode, true);
+    if (!m_machine->isConnected()) {
+        return;
+    }
+
+    sendCommand(MachineControl::BitDownMMMode);
 }
 
 // --- GUI UPDATE LOOP ---
@@ -223,6 +227,15 @@ void Iso6892Form::displayResults(const Iso6892Results &res)
         ui->leReL->setText("-");
         ui->leRp02->setText(QString::number(res.Rp02, 'f', 1));
     }
+}
+
+void Iso6892Form::sendCommand(int cmd)
+{
+    m_machine->sendCommand((MachineControl::ControlBit) cmd, true);
+    QTimer::singleShot(MACHINE_INTERVAL, [this, cmd]() {
+        if (m_machine->isConnected())
+            m_machine->sendCommand((MachineControl::ControlBit) cmd, false);
+    });
 }
 
 void Iso6892Form::replaceWidgetInGroupBox(QGroupBox *groupBox, QWidget *newWidget)

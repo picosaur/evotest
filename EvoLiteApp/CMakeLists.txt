@@ -43,6 +43,7 @@ else()
             ${PROJECT_SOURCES}
             TensilePlotWidget.h TensilePlotWidget.cpp
             Iso6892Analyzer.h Iso6892Analyzer.cpp
+            CommandForm.h CommandForm.cpp CommandForm.ui
         )
     endif()
 endif()
