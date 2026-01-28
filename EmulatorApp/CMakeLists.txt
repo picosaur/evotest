@@ -39,6 +39,7 @@ else()
         add_executable(EmulatorApp
             ${PROJECT_SOURCES}
             LoggingModbusServer.h LoggingModbusServer.cpp
+            EmulIso6892.h EmulIso6892.cpp
         )
     endif()
 endif()

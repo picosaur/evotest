@@ -2,7 +2,6 @@
 #define LOGGINGMODBUSSERVER_H
 
 #include <QModbusTcpServer>
-#include <QObject>
 
 class LoggingModbusServer : public QModbusTcpServer
 {
@@ -11,7 +10,6 @@ public:
     explicit LoggingModbusServer(QObject *parent = nullptr);
 
 protected:
-    // Переопределяем этот метод, чтобы перехватывать запросы
     QModbusResponse processRequest(const QModbusPdu &request) override;
 
 signals:

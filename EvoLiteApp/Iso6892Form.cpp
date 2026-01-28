@@ -46,11 +46,6 @@ Iso6892Form::Iso6892Form(MachineControl *machine, QWidget *parent)
     ui->btnStop->setEnabled(false);
     ui->btnReturn->setEnabled(false);
     ui->btnZero->setEnabled(false);
-
-    ui->lcdExtension->setDigitCount(5);
-    ui->lcdLoad->setDigitCount(5);
-    ui->lcdStress->setDigitCount(5);
-    ui->lcdTime->setDigitCount(5);
 }
 
 Iso6892Form::~Iso6892Form()

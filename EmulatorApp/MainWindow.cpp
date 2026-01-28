@@ -1,10 +1,10 @@
 #include "MainWindow.h"
 #include <QDataStream>
 #include <QDateTime>
+#include <QDebug>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
-#include <QMessageBox>
 #include <QRandomGenerator>
 #include <QVBoxLayout>
 
@@ -13,11 +13,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUi();
 
+    // Создаем наш кастомный сервер с логированием
     modbusDevice = new LoggingModbusServer(this);
     connect(modbusDevice, &LoggingModbusServer::logMessage, this, &MainWindow::onLogMessage);
-    connect(modbusDevice, &QModbusServer::stateChanged, this, &MainWindow::onStateChanged);
+
+    // !!! ВАЖНО: Подключаем сигнал записи для мгновенной реакции на кнопки !!!
     connect(modbusDevice, &QModbusServer::dataWritten, this, &MainWindow::handleDataWritten);
 
+    // Таймер физики процесса (100 мс = 10 Гц)
     simTimer = new QTimer(this);
     connect(simTimer, &QTimer::timeout, this, &MainWindow::updateSimulation);
 }
@@ -30,71 +33,74 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUi()
 {
-    setWindowTitle("EmulatorApp");
-
     QWidget *central = new QWidget(this);
     setCentralWidget(central);
     QVBoxLayout *mainLay = new QVBoxLayout(central);
 
-    // --- ГРУППА НАСТРОЕК ---
-    QGroupBox *grpSet = new QGroupBox("Настройки соединения");
+    // --- Группа Настроек ---
+    QGroupBox *grpSet = new QGroupBox("Настройки сервера (ПЛК)");
     QHBoxLayout *laySet = new QHBoxLayout(grpSet);
 
-    leIp = new QLineEdit("0.0.0.0"); // Слушаем все интерфейсы по умолчанию
-    leIp->setToolTip("0.0.0.0 для доступа извне, 127.0.0.1 только локально");
+    leIp = new QLineEdit("0.0.0.0");
+    leIp->setToolTip("0.0.0.0 - слушать все интерфейсы");
 
     sbPort = new QSpinBox();
     sbPort->setRange(1, 65535);
     sbPort->setValue(5020);
 
-    // Новое поле для Slave ID
     sbSlaveId = new QSpinBox();
-    sbSlaveId->setRange(1, 247); // Стандартный диапазон Modbus
-    sbSlaveId->setValue(1);
+    sbSlaveId->setRange(1, 247);
+    sbSlaveId->setValue(1); // Обычно Slave ID = 1
 
-    btnStart = new QPushButton("Старт");
-    btnStop = new QPushButton("Стоп");
+    cmbSimType = new QComboBox();
+    cmbSimType->addItem("Линейная (Пружина)");
+    cmbSimType->addItem("Стандарт ISO 6892-1 (Металл)");
+
+    btnStart = new QPushButton("Запустить сервер");
+    btnStop = new QPushButton("Остановить");
     btnStop->setEnabled(false);
 
     laySet->addWidget(new QLabel("IP:"));
     laySet->addWidget(leIp);
     laySet->addWidget(new QLabel("Port:"));
     laySet->addWidget(sbPort);
-    laySet->addWidget(new QLabel("Slave ID:")); // Подпись
-    laySet->addWidget(sbSlaveId);               // Виджет
+    laySet->addWidget(new QLabel("ID:"));
+    laySet->addWidget(sbSlaveId);
+    laySet->addWidget(new QLabel("Режим:"));
+    laySet->addWidget(cmbSimType);
     laySet->addWidget(btnStart);
     laySet->addWidget(btnStop);
 
-    // --- ТАБЛИЦЫ ---
-    QGroupBox *grpRegs = new QGroupBox("Карта регистров (Монитор)");
+    // --- Группа Таблиц ---
+    QGroupBox *grpRegs = new QGroupBox("Карта регистров");
     QHBoxLayout *layRegs = new QHBoxLayout(grpRegs);
 
     tableHolding = new QTableWidget(20, 2);
     tableHolding->setHorizontalHeaderLabels({"Addr", "Holding (RW)"});
     tableHolding->setColumnWidth(0, 40);
-    tableHolding->setColumnWidth(1, 140);
+    tableHolding->setColumnWidth(1, 130);
 
     tableInput = new QTableWidget(10, 2);
     tableInput->setHorizontalHeaderLabels({"Addr", "Input (RO)"});
     tableInput->setColumnWidth(0, 40);
-    tableInput->setColumnWidth(1, 140);
+    tableInput->setColumnWidth(1, 130);
 
     layRegs->addWidget(tableHolding);
     layRegs->addWidget(tableInput);
 
-    // --- ЛОГ ---
+    // --- Лог ---
     txtLog = new QTextEdit();
     txtLog->setReadOnly(true);
 
     mainLay->addWidget(grpSet);
     mainLay->addWidget(grpRegs);
-    mainLay->addWidget(new QLabel("Журнал операций:"));
+    mainLay->addWidget(new QLabel("Журнал событий:"));
     mainLay->addWidget(txtLog);
 
     connect(btnStart, &QPushButton::clicked, this, &MainWindow::onBtnStartClicked);
     connect(btnStop, &QPushButton::clicked, this, &MainWindow::onBtnStopClicked);
 
-    resize(850, 600);
+    resize(950, 650);
 }
 
 void MainWindow::onBtnStartClicked()
@@ -102,36 +108,54 @@ void MainWindow::onBtnStartClicked()
     if (!modbusDevice)
         return;
 
+    // Настраиваем карту памяти
     QModbusDataUnitMap regMap;
     regMap.insert(QModbusDataUnit::HoldingRegisters, {QModbusDataUnit::HoldingRegisters, 0, 50});
     regMap.insert(QModbusDataUnit::InputRegisters, {QModbusDataUnit::InputRegisters, 0, 50});
 
     modbusDevice->setMap(regMap);
-
-    // --- ПРИМЕНЯЕМ SLAVE ID ИЗ GUI ---
     modbusDevice->setServerAddress(sbSlaveId->value());
-
     modbusDevice->setConnectionParameter(QModbusDevice::NetworkAddressParameter, leIp->text());
     modbusDevice->setConnectionParameter(QModbusDevice::NetworkPortParameter, sbPort->value());
 
     if (modbusDevice->connectDevice()) {
         btnStart->setEnabled(false);
         btnStop->setEnabled(true);
-        // Блокируем настройки пока сервер запущен
+
+        // Блокируем настройки UI
+        sbSlaveId->setEnabled(false);
         leIp->setEnabled(false);
         sbPort->setEnabled(false);
-        sbSlaveId->setEnabled(false);
+        cmbSimType->setEnabled(false); // Лучше заблокировать смену режима на лету
 
+        // --- 1. СБРОС ВНУТРЕННИХ ПЕРЕМЕННЫХ ---
+        currentPos = 0.0f;
+        currentLoad = 0.0f;
+        testTime = 0.0f;
+        maxLoad = 0.0f;
+        startPos = 0.0f;
+        isTestRunning = false;
+
+        // --- 2. СБРОС МАТЕМАТИЧЕСКОЙ МОДЕЛИ ---
+        isoEmulator.reset(0.0f);
+
+        // --- 3. ЗАПИСЬ НУЛЕЙ В MODBUS (Input Registers) ---
+        // Чтобы клиент сразу увидел чистое состояние
+        setInputFloat(I_POS, 0.0f);
+        setInputFloat(I_LOAD, 0.0f);
+        setInputFloat(I_TIME, 0.0f);
+        setInputFloat(I_ELONGATION, 0.0f);
+        setInputFloat(I_MAX_LOAD, 0.0f);
+
+        // --- 4. УСТАНОВКА НАСТРОЕК ПО УМОЛЧАНИЮ (Holding Registers) ---
+        setHoldingInt(H_TEST_SPEED, 50);    // 50 мм/мин
+        setHoldingInt(H_MANUAL_SPEED, 200); // 200 мм/мин
+        setHoldingInt(H_CMD, 0);            // Сброс командного слова
+
+        // Запуск таймера физики
         simTimer->start(100);
 
-        // Инициализация дефолтных значений
-        setHoldingInt(H_TEST_SPEED, 50);
-        setHoldingInt(H_MANUAL_SPEED, 200);
-
-        onLogMessage(QString("СЕРВЕР ЗАПУЩЕН. IP: %1 : %2 | Slave ID: %3")
-                         .arg(leIp->text())
-                         .arg(sbPort->value())
-                         .arg(sbSlaveId->value()));
+        onLogMessage("СЕРВЕР ЗАПУЩЕН. Память очищена.");
     } else {
         onLogMessage("Ошибка запуска: " + modbusDevice->errorString());
     }
@@ -145,12 +169,11 @@ void MainWindow::onBtnStopClicked()
 
     btnStart->setEnabled(true);
     btnStop->setEnabled(false);
-    // Разблокируем настройки
+    sbSlaveId->setEnabled(true);
     leIp->setEnabled(true);
     sbPort->setEnabled(true);
-    sbSlaveId->setEnabled(true);
 
-    onLogMessage("Сервер остановлен.");
+    onLogMessage("СЕРВЕР ОСТАНОВЛЕН.");
 }
 
 void MainWindow::onLogMessage(const QString &msg)
@@ -159,174 +182,227 @@ void MainWindow::onLogMessage(const QString &msg)
     txtLog->append(QString("[%1] %2").arg(ts, msg));
 }
 
-void MainWindow::onStateChanged(QModbusDevice::State state)
-{
-    // Оставим пустым или добавим детальный статус,
-    // основное логирование идет через onBtnStart/Stop
-}
-
+// --- МГНОВЕННАЯ ОБРАБОТКА КОМАНД ---
 void MainWindow::handleDataWritten(QModbusDataUnit::RegisterType type, int address, int size)
 {
-    if (type == QModbusDataUnit::HoldingRegisters) {
-        // Доп. логирование если нужно
+    // Нас интересуют только Holding Register 0 (Команды)
+    if (type != QModbusDataUnit::HoldingRegisters)
+        return;
+
+    // Проверяем, попал ли адрес 0 в диапазон записи
+    bool cmdRegisterChanged = (address <= H_CMD) && (address + size > H_CMD);
+
+    if (cmdRegisterChanged) {
+        quint16 cmd = getHoldingInt(H_CMD);
+
+        // Разбираем биты
+        bool bStart = getBit(cmd, 0);
+        bool bStop = getBit(cmd, 1);
+        if (getBit(cmd, 5))
+            bStop = true; // Доп. стоп
+
+        // 1. ЛОГИКА СТОП
+        if (bStop) {
+            if (isTestRunning) {
+                isTestRunning = false;
+                onLogMessage("CMD: Получен СТОП.");
+            }
+        }
+
+        // 2. ЛОГИКА СТАРТ
+        // Если пришла команда СТАРТ и НЕТ команды СТОП
+        if (bStart && !bStop) {
+            // Запускаем, если тест не шел, или перезапускаем
+            if (!isTestRunning) {
+                isTestRunning = true;
+
+                // --- ИНИЦИАЛИЗАЦИЯ ПАРАМЕТРОВ ---
+                testTime = 0.0f;
+                maxLoad = 0.0f;
+                startPos = currentPos; // Запоминаем текущую позицию как ноль
+                currentLoad = 0.0f;
+
+                // Сброс математической модели
+                if (cmbSimType->currentIndex() == 1) {
+                    isoEmulator.reset(startPos);
+                    onLogMessage("CMD: СТАРТ ISO 6892-1 (Металл)");
+                } else {
+                    onLogMessage("CMD: СТАРТ Линейный тест");
+                }
+
+                // --- ПРИНУДИТЕЛЬНОЕ ОБНУЛЕНИЕ РЕГИСТРОВ ---
+                // Чтобы клиент мгновенно увидел сброс графиков
+                setInputFloat(I_TIME, 0.0f);
+                setInputFloat(I_ELONGATION, 0.0f);
+                setInputFloat(I_MAX_LOAD, 0.0f);
+                setInputFloat(I_LOAD, 0.0f);
+            }
+        }
     }
 }
 
-// === ФИЗИКА ===
+// --- ФИЗИКА СИМУЛЯЦИИ (по таймеру) ---
 void MainWindow::updateSimulation()
 {
     if (modbusDevice->state() != QModbusDevice::ConnectedState)
         return;
 
+    // Читаем текущие кнопки для ручного режима (удержание)
     quint16 cmd = getHoldingInt(H_CMD);
-
-    bool bStartTest = getBit(cmd, 0);
-    bool bStop = getBit(cmd, 1);
     bool bUp = getBit(cmd, 2);
     bool bDown = getBit(cmd, 3);
-    if (getBit(cmd, 5))
-        bStop = true;
+    bool bStop = getBit(cmd, 1) || getBit(cmd, 5);
 
-    float dt = 0.1f;
-
-    if (bStop) {
+    if (bStop)
         isTestRunning = false;
-    }
 
-    if (bStartTest && !isTestRunning && !bStop) {
-        isTestRunning = true;
-        testTime = 0;
-        maxLoad = 0;
-        startPos = currentPos;
-        onLogMessage("--> СТАРТ ИСПЫТАНИЯ");
-    }
+    float dt = 0.1f; // 100ms
 
     if (isTestRunning) {
-        float speed = (float) getHoldingInt(H_TEST_SPEED);
-        if (speed <= 0.1f)
-            speed = 10.0f;
-
-        currentPos += (speed / 60.0f) * dt;
+        // === РЕЖИМ ИСПЫТАНИЯ ===
         testTime += dt;
 
-        float elongation = currentPos - startPos;
-        if (elongation < 0)
-            elongation = 0;
+        float speed = (float) getHoldingInt(H_TEST_SPEED);
+        if (speed < 0.1f)
+            speed = 50.0f;
 
-        float k = 10.0f;
-        float noise = (QRandomGenerator::global()->generateDouble() - 0.5) * 0.05;
+        if (cmbSimType->currentIndex() == 0) {
+            // Линейная пружина
+            currentPos += (speed / 60.0f) * dt;
+            float elong = currentPos - startPos;
+            if (elong < 0)
+                elong = 0;
+            // Простое F = k*x + шум
+            currentLoad = (elong * 50.0f)
+                          + ((QRandomGenerator::global()->generateDouble() - 0.5) * 0.1);
+        } else {
+            // ISO 6892-1
+            isoEmulator.update(dt, speed, true);
+            currentPos = isoEmulator.getPosition();
+            currentLoad = isoEmulator.getLoad();
+        }
 
-        currentLoad = (elongation * k) + noise;
+        // Пиковый детектор
         if (currentLoad > maxLoad)
             maxLoad = currentLoad;
+        float elong = currentPos - startPos;
 
+        // Запись в Modbus
         setInputFloat(I_TIME, testTime);
-        setInputFloat(I_ELONGATION, elongation);
+        setInputFloat(I_ELONGATION, elong);
         setInputFloat(I_MAX_LOAD, maxLoad);
 
     } else {
-        // Ручной
+        // === РУЧНОЙ РЕЖИМ ===
         float mSpeed = (float) getHoldingInt(H_MANUAL_SPEED);
-        if (mSpeed <= 0.1f)
+        if (mSpeed < 0.1f)
             mSpeed = 50.0f;
 
         if (bUp && !bStop) {
             currentPos += (mSpeed / 60.0f) * dt;
+            // Синхронизация ISO модели при ручном движении
+            if (cmbSimType->currentIndex() == 1)
+                isoEmulator.reset(currentPos);
         } else if (bDown && !bStop) {
             currentPos -= (mSpeed / 60.0f) * dt;
             if (currentPos < 0)
                 currentPos = 0;
+            if (cmbSimType->currentIndex() == 1)
+                isoEmulator.reset(currentPos);
         }
 
-        currentLoad = (QRandomGenerator::global()->generateDouble() - 0.5) * 0.02;
+        // Шум нуля
+        currentLoad = (QRandomGenerator::global()->generateDouble() - 0.5) * 0.05;
     }
 
+    // Обновляем главные регистры (всегда)
     setInputFloat(I_POS, currentPos);
     setInputFloat(I_LOAD, currentLoad);
+
+    // Логирование фаз (опционально)
+    if (isTestRunning && cmbSimType->currentIndex() == 1) {
+        static QString lastPh;
+        QString ph = isoEmulator.getCurrentPhaseName();
+        if (!ph.isEmpty() && ph != lastPh) {
+            // onLogMessage("Фаза: " + ph); // Можно раскомментировать
+            lastPh = ph;
+        }
+    }
 
     updateTables();
 }
 
 void MainWindow::updateTables()
 {
-    // Обновляем UI таблицы (Holding)
+    // Обновление таблицы Holding
     for (int i = 0; i < 20; i++) {
         quint16 val;
         modbusDevice->data(QModbusDataUnit::HoldingRegisters, i, &val);
-
-        if (tableHolding->item(i, 0) == nullptr) {
+        if (!tableHolding->item(i, 0)) {
             tableHolding->setItem(i, 0, new QTableWidgetItem(QString::number(i)));
             tableHolding->setItem(i, 1, new QTableWidgetItem());
         }
-
-        QString strVal = QString::number(val);
-        if (i == H_SHIFT_X || i == H_MOVE_X || i == H_TEST_SPEED || i == H_MANUAL_SPEED) {
-            // Можно добавить расшифровку для удобства
-        }
-        tableHolding->item(i, 1)->setText(strVal);
+        tableHolding->item(i, 1)->setText(QString::number(val));
     }
 
-    // Обновляем UI таблицы (Input)
+    // Обновление таблицы Input
     for (int i = 0; i < 10; i++) {
         quint16 val;
         modbusDevice->data(QModbusDataUnit::InputRegisters, i, &val);
-
-        if (tableInput->item(i, 0) == nullptr) {
+        if (!tableInput->item(i, 0)) {
             tableInput->setItem(i, 0, new QTableWidgetItem(QString::number(i)));
             tableInput->setItem(i, 1, new QTableWidgetItem());
         }
-
-        QString strVal = QString::number(val);
-        // Визуальная подсказка для float значений
-        if (i == I_POS && i + 1 < 10)
-            strVal += QString(" (Pos: %1)").arg(currentPos, 0, 'f', 1);
-        if (i == I_LOAD && i + 1 < 10)
-            strVal += QString(" (Load: %1)").arg(currentLoad, 0, 'f', 1);
-
-        tableInput->item(i, 1)->setText(strVal);
+        QString txt = QString::number(val);
+        // Подсказка для float значений (парсим 2 регистра)
+        if ((i == 0 || i == 2 || i == 4 || i == 6 || i == 8) && i + 1 < 10) {
+            quint16 nextVal;
+            modbusDevice->data(QModbusDataUnit::InputRegisters, i + 1, &nextVal);
+            QByteArray b;
+            b.resize(4);
+            // Big Endian
+            b[0] = (val >> 8) & 0xFF;
+            b[1] = val & 0xFF;
+            b[2] = (nextVal >> 8) & 0xFF;
+            b[3] = nextVal & 0xFF;
+            float f;
+            QDataStream s(b);
+            s.setFloatingPointPrecision(QDataStream::SinglePrecision);
+            s >> f;
+            txt += QString(" (f: %1)").arg(f, 0, 'f', 2);
+        }
+        tableInput->item(i, 1)->setText(txt);
     }
 }
 
-// Helpers
-bool MainWindow::getBit(quint16 val, int bit)
-{
-    return (val >> bit) & 1;
-}
+// --- HELPERS ---
+
 quint16 MainWindow::getHoldingInt(int addr)
 {
     quint16 v;
     modbusDevice->data(QModbusDataUnit::HoldingRegisters, addr, &v);
     return v;
 }
+
 void MainWindow::setHoldingInt(int addr, quint16 val)
 {
     modbusDevice->setData(QModbusDataUnit::HoldingRegisters, addr, val);
 }
+
+bool MainWindow::getBit(quint16 val, int bit)
+{
+    return (val >> bit) & 1;
+}
+
 void MainWindow::setInputFloat(int addr, float val)
 {
     QByteArray buf;
     QDataStream s(&buf, QIODevice::WriteOnly);
     s.setFloatingPointPrecision(QDataStream::SinglePrecision);
     s << val;
+    // Big Endian для Modbus
     quint16 h = (static_cast<quint8>(buf[0]) << 8) | static_cast<quint8>(buf[1]);
     quint16 l = (static_cast<quint8>(buf[2]) << 8) | static_cast<quint8>(buf[3]);
     modbusDevice->setData(QModbusDataUnit::InputRegisters, addr, h);
     modbusDevice->setData(QModbusDataUnit::InputRegisters, addr + 1, l);
-}
-float MainWindow::getHoldingFloat(int addr)
-{
-    quint16 h, l;
-    modbusDevice->data(QModbusDataUnit::HoldingRegisters, addr, &h);
-    modbusDevice->data(QModbusDataUnit::HoldingRegisters, addr + 1, &l);
-    QByteArray buf;
-    buf.resize(4);
-    buf[0] = (h >> 8) & 0xFF;
-    buf[1] = h & 0xFF;
-    buf[2] = (l >> 8) & 0xFF;
-    buf[3] = l & 0xFF;
-    float val;
-    QDataStream s(buf);
-    s.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    s >> val;
-    return val;
 }

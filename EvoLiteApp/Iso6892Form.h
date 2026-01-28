@@ -83,5 +83,5 @@ private:
     void sendCommand(int cmd);
 
     void replaceWidgetInGroupBox(QGroupBox *groupBox, QWidget *newWidget);
-    void setLcdUniversal(QLCDNumber *lcd, double val, int width = 5, int prec = 1);
+    void setLcdUniversal(QLCDNumber *lcd, double val, int width = 6, int prec = 1);
 };

@@ -139,7 +139,9 @@ bool Iso6892Analyzer::fitElasticModulus(double &E, double &slopeOffset)
     for (int i = 0; i < m_stress.size(); ++i) {
         // Дополнительная проверка: только на восходящем участке (до Rm)
         if (m_stress[i] >= lowerLimit && m_stress[i] <= upperLimit) {
-            double x = m_strain[i];
+            // Если m_strain хранит проценты (например 0.2%),
+            // для расчета модуля их нужно превратить в абсолютную величину (0.002)
+            double x = m_strain[i] / 100.0;
             double y = m_stress[i];
             sumX += x;
             sumY += y;
@@ -159,12 +161,18 @@ bool Iso6892Analyzer::fitElasticModulus(double &E, double &slopeOffset)
     if (std::abs(denominator) < 1e-9)
         return false;
 
+    // Результат будет в тех же единицах, что и Y (Stress).
+    // Если Stress в МПа, то и E в МПа.
+    // 190000 МПа = 190 ГПа.
     E = (n * sumXY - sumX * sumY) / denominator; // Наклон
     double intercept = (sumY - E * sumX) / n;    // Свободный член b
 
+    // Смещение тоже нужно вернуть, но slopeOffset обычно нужен в % для графика.
+    // Тут зависит от того, как вы его применяете.
+    // Если график в %, то offset нужно умножить обратно на 100.
     // Смещение нуля по X (Toe correction)
     // 0 = E * x + b  =>  x = -b / E
-    slopeOffset = -intercept / E;
+    slopeOffset = -intercept / E * 100.0;
 
     return true;
 }
