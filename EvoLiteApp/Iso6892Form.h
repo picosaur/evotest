@@ -2,6 +2,7 @@
 #include <QTimer>
 #include <QWidget>
 class QGroupBox;
+class QLCDNumber;
 
 class MachineControl;
 class Iso6892Analyzer;
@@ -41,6 +42,7 @@ private slots:
     // Получение сырых данных (сигналы MachineControl)
     void onCurrentLoadChanged(float kgVal);
     void onLengthChanged(float mmVal);
+    void onTestTimeChanhed(float sVal);
 
     // --- Таймер GUI ---
     // Обновляет графики и цифры (независимо от частоты Modbus)
@@ -66,6 +68,7 @@ private:
     // Кэш последних данных с машины
     double m_lastRawForceKg;
     double m_lastRawExtMm;
+    double m_lastTestTimeS;
 
     // Смещение нуля (Tare)
     double m_forceOffsetKg;
@@ -80,4 +83,5 @@ private:
     void sendCommand(int cmd);
 
     void replaceWidgetInGroupBox(QGroupBox *groupBox, QWidget *newWidget);
+    void setLcdUniversal(QLCDNumber *lcd, double val, int width = 5, int prec = 1);
 };

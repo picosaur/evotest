@@ -1,4 +1,5 @@
 #include "Iso6892Form.h"
+#include <QLCDNumber>
 #include <QMessageBox>
 #include "Iso6892Analyzer.h"
 #include "MachineControl.h"
@@ -13,6 +14,7 @@ Iso6892Form::Iso6892Form(MachineControl *machine, QWidget *parent)
     , m_isTestRunning(false)
     , m_lastRawForceKg(0)
     , m_lastRawExtMm(0)
+    , m_lastTestTimeS(0)
     , m_forceOffsetKg(0)
     , m_extOffsetMm(0)
     , m_currentS0(1.0)
@@ -34,6 +36,7 @@ Iso6892Form::Iso6892Form(MachineControl *machine, QWidget *parent)
             this,
             &Iso6892Form::onCurrentLoadChanged);
     connect(m_machine, &MachineControl::lengthChanged, this, &Iso6892Form::onLengthChanged);
+    connect(m_machine, &MachineControl::testTimeChanged, this, &Iso6892Form::onTestTimeChanhed);
 
     // Таймер GUI
     connect(m_guiTimer, &QTimer::timeout, this, &Iso6892Form::onGuiTimerTick);
@@ -43,6 +46,11 @@ Iso6892Form::Iso6892Form(MachineControl *machine, QWidget *parent)
     ui->btnStop->setEnabled(false);
     ui->btnReturn->setEnabled(false);
     ui->btnZero->setEnabled(false);
+
+    ui->lcdExtension->setDigitCount(5);
+    ui->lcdLoad->setDigitCount(5);
+    ui->lcdStress->setDigitCount(5);
+    ui->lcdTime->setDigitCount(5);
 }
 
 Iso6892Form::~Iso6892Form()
@@ -81,6 +89,11 @@ void Iso6892Form::onCurrentLoadChanged(float kgVal)
 void Iso6892Form::onLengthChanged(float mmVal)
 {
     m_lastRawExtMm = mmVal;
+}
+
+void Iso6892Form::onTestTimeChanhed(float sVal)
+{
+    m_lastTestTimeS = sVal;
 }
 
 // --- УПРАВЛЕНИЕ ---
@@ -189,10 +202,16 @@ void Iso6892Form::onGuiTimerTick()
     double forceN = netForceKg * 9.80665;
 
     // Обновляем дисплеи
-    ui->lcdLoad->display(forceN / 1000.0); // кН
-    ui->lcdExtension->display(netExtMm);
     double stress = (m_currentS0 > 0) ? (forceN / m_currentS0) : 0;
-    ui->lcdStress->display(stress);
+    //ui->lcdLoad->display(forceN / 1000.0); // кН
+    //ui->lcdExtension->display(netExtMm);
+    //ui->lcdStress->display(stress);
+    //ui->lcdTime->display(m_lastTestTimeS);
+
+    setLcdUniversal(ui->lcdLoad, forceN / 1000.0);
+    setLcdUniversal(ui->lcdExtension, netExtMm);
+    setLcdUniversal(ui->lcdStress, stress);
+    setLcdUniversal(ui->lcdTime, m_lastTestTimeS);
 
     if (m_isTestRunning) {
         // Данные для математики
@@ -251,6 +270,36 @@ void Iso6892Form::replaceWidgetInGroupBox(QGroupBox *groupBox, QWidget *newWidge
 
     // Добавление
     layout->addWidget(newWidget);
+}
+
+void Iso6892Form::setLcdUniversal(QLCDNumber *lcd, double val, int width, int prec)
+{
+    // 1. Устанавливаем количество сегментов в самом LCD
+    lcd->setDigitCount(width);
+
+    // 2. Форматируем модуль числа (без знака) с фиксированной точкой
+    QString text = QString::number(qAbs(val), 'f', prec);
+
+    // 3. Вычисляем, сколько места нужно заполнить нулями
+    // Если число отрицательное, резервируем 1 знак под минус
+    int paddingWidth = (val < 0) ? (width - 1) : width;
+
+    // 4. Дополняем нулями слева
+    text = text.rightJustified(paddingWidth, '0');
+
+    // 5. Если было отрицательное число, добавляем минус в начало
+    if (val < 0) {
+        text.prepend("-");
+    }
+
+    // 6. Обрезаем, если вдруг число больше чем влезает (защита от переполнения)
+    // Например, если width=5, а число 12345.6, берем последние 5 символов или оставляем как есть
+    if (text.length() > width) {
+        // Можно решить: обрезать или оставить (LCD сам может показать ошибку)
+        // text = text.right(width);
+    }
+
+    lcd->display(text);
 }
 
 void Iso6892Form::on_rbRound_toggled(bool checked)

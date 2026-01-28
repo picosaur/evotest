@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1400</width>
-    <height>900</height>
+    <width>1121</width>
+    <height>689</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,6 @@
       <font>
        <family>Segoe UI</family>
        <pointsize>18</pointsize>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -175,7 +174,6 @@
           </property>
           <property name="font">
            <font>
-            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -197,7 +195,6 @@
           </property>
           <property name="font">
            <font>
-            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -246,8 +243,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>448</width>
-          <height>669</height>
+          <width>431</width>
+          <height>829</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_Side">
@@ -409,7 +406,6 @@
              <widget class="QLabel" name="label_Rm">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -422,7 +418,6 @@
              <widget class="QLineEdit" name="leRm">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
