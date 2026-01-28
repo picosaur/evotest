@@ -1,5 +1,9 @@
 #include "Iso6892Analyzer.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 Iso6892Analyzer::Iso6892Analyzer(QObject *parent)
     : QObject(parent)
     , m_S0(1.0)
