@@ -6,10 +6,6 @@
 #include "ui_Iso6892Form.h"
 #include <cmath>
 
-namespace {
-inline static const int MACHINE_INTERVAL{500};
-}
-
 Iso6892Form::Iso6892Form(MachineControl *machine, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Iso6892Form)
@@ -137,7 +133,7 @@ void Iso6892Form::on_btnStart_clicked()
     // 5. Старт машины
     m_machine->setTestSpeed(static_cast<int>(ui->sbSpeed->value()));
 
-    QTimer::singleShot(MACHINE_INTERVAL, [this]() { sendCommand(MachineControl::BitStartTest); });
+    QTimer::singleShot(500, [this]() { sendCommand(MachineControl::BitStartTest); });
 
     m_isTestRunning = true;
     ui->gbGeometry->setEnabled(false);
@@ -232,7 +228,7 @@ void Iso6892Form::displayResults(const Iso6892Results &res)
 void Iso6892Form::sendCommand(int cmd)
 {
     m_machine->sendCommand((MachineControl::ControlBit) cmd, true);
-    QTimer::singleShot(MACHINE_INTERVAL, [this, cmd]() {
+    QTimer::singleShot(500, [this, cmd]() {
         if (m_machine->isConnected())
             m_machine->sendCommand((MachineControl::ControlBit) cmd, false);
     });
