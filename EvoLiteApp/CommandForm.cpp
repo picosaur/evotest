@@ -101,6 +101,11 @@ void CommandForm::startCommandTimer(int command)
 {
     stopCommandTimer(command);
 
+    // 0. Отправляем команду сразу
+    if (m_machine->isConnected()) {
+        m_machine->sendCommand((MachineControl::ControlBit) command, true);
+    }
+
     // 1. Создаем таймер
     m_commandTimer = new QTimer(this);
 
